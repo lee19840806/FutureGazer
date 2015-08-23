@@ -48,11 +48,14 @@ class UsersTable extends Table
         $validator
             ->requirePresence('username', 'create')
             ->notEmpty('username')
-            ->add('username', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add('username', 'unique', ['rule' => 'validateUnique', 'provider' => 'table'])
+            ->add('username', 'email', ['rule' => ['email'], 'message' => 'Email address must be valid']);
 
         $validator
             ->requirePresence('password', 'create')
-            ->notEmpty('password');
+            ->notEmpty('password')
+            ->add('password', 'length', ['rule' => ['lengthBetween', 6, 14], 'message' => 'Password length must be between 6 and 20'])
+            ->add('password', 'no_space', ['rule' => ['custom', '/^[\S]*$/'], 'message' => 'Password must have no space']);
 
         $validator
             ->requirePresence('role', 'create')

@@ -33,6 +33,21 @@ class UsersController extends AppController
             $user = $this->Users->newEntity();
             $user = $this->Users->patchEntity($user, $userInfo);
             
+            if ($user->errors())
+            {
+                $errorPrompt = '';
+                
+                foreach ($user->errors() as $errorField)
+                {
+                    $a = array_values($errorField);
+                    $errorPrompt .= implode('. ', array_values($errorField));
+                    $errorPrompt .= '. ';
+                }
+                
+                $this->Flash->set($errorPrompt, ['element' => 'alert']);
+                return $this->redirect(['action' => 'register']);
+            }
+            
             if ($this->Users->save($user))
             {
                 $this->Flash->set('The new user has been registered successfully, please sign in.', ['element' => 'success']);
