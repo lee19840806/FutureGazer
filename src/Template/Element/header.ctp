@@ -18,7 +18,12 @@
             </ul>
             
             <ul class="nav navbar-nav navbar-right">
-                <li><a href="../navbar/">Sign In</a></li>
+                <li>
+                    <?= is_null($this->request->session()->read('Users.username')) ? 
+                        $this->Html->link('Sign in', '/Users/login') :
+                        $this->Html->link($this->request->session()->read('Users.username') . ', sign out', '/Users/logout');
+                    ?>
+                </li>
             </ul>
         </div>
     </div>
