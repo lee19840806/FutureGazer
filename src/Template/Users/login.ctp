@@ -11,12 +11,12 @@
             <label for="inputPassword" class="sr-only">Password</label>
             <input type="password" id="password" name="password" class="form-control" placeholder="Password" required>
             <br>
-            <button class="btn btn-lg btn-success btn-block" type="submit">Sign In</button>
+            <button class="btn btn-success btn-block" type="submit"><strong>Sign In</strong></button>
         </form>
         <br>
         <hr>
         <br>
-        <p>Sign up if you don't have an account</p>
-        <a class="btn btn-lg btn-primary btn-block" href="/Users/register" role="button">Sign Up</a>
+        <p><strong>Sign up if you don't have an account</strong></p>
+        <a class="btn btn-primary btn-block" href="/Users/register" role="button"><strong>Sign Up</strong></a>
     </div>
 </div>

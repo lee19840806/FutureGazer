@@ -13,12 +13,12 @@
             <label for="inputPassword" class="sr-only">Confirm password</label>
             <input type="password" id="passwordConfirm" name="passwordConfirm" class="form-control" placeholder="Confirm password" required>
             <br>
-            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign Up</button>
+            <button class="btn btn-primary btn-block" type="submit"><strong>Sign Up</strong></button>
         </form>
         <br>
         <hr>
         <br>
-        <p>Sign in if you already have an account</p>
-        <a class="btn btn-lg btn-success btn-block" href="/Users/login" role="button">Sign In</a>
+        <p><strong>Sign in if you already have an account</strong></p>
+        <a class="btn btn-success btn-block" href="/Users/login" role="button"><strong>Sign In</strong></a>
     </div>
 </div>

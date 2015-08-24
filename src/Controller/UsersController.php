@@ -60,6 +60,11 @@ class UsersController extends AppController
             }
         }
     }
+    
+    public function welcome()
+    {
+        
+    }
 
     public function login()
     {
