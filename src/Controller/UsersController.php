@@ -65,6 +65,11 @@ class UsersController extends AppController
     {
         
     }
+    
+    public function tutorial()
+    {
+    
+    }
 
     public function login()
     {

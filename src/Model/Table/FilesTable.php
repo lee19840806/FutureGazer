@@ -1,17 +1,18 @@
 <?php
 namespace App\Model\Table;
 
-use App\Model\Entity\User;
+use App\Model\Entity\File;
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
- * Users Model
+ * Files Model
  *
+ * @property \Cake\ORM\Association\BelongsTo $Users
  */
-class UsersTable extends Table
+class FilesTable extends Table
 {
 
     /**
@@ -24,16 +25,15 @@ class UsersTable extends Table
     {
         parent::initialize($config);
 
-        $this->table('users');
-        $this->displayField('username');
+        $this->table('files');
+        $this->displayField('name');
         $this->primaryKey('id');
 
         $this->addBehavior('Timestamp');
 
-        $this->hasMany('Files', [
+        $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
-            'sort' => ['Files.created' => 'DESC'],
-            'dependent' => true
+            'joinType' => 'INNER'
         ]);
     }
 
@@ -51,20 +51,11 @@ class UsersTable extends Table
             ->add('id', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->requirePresence('username', 'create')
-            ->notEmpty('username')
-            ->add('username', 'unique', ['rule' => 'validateUnique', 'provider' => 'table'])
-            ->add('username', 'email', ['rule' => ['email'], 'message' => 'Email address must be valid']);
+            ->requirePresence('name', 'create')
+            ->notEmpty('name');
 
         $validator
-            ->requirePresence('password', 'create')
-            ->notEmpty('password')
-            ->add('password', 'length', ['rule' => ['lengthBetween', 6, 14], 'message' => 'Password length must be between 6 and 20'])
-            ->add('password', 'no_space', ['rule' => ['custom', '/^[\S]*$/'], 'message' => 'Password must have no space']);
-
-        $validator
-            ->requirePresence('role', 'create')
-            ->notEmpty('role');
+            ->allowEmpty('description');
 
         return $validator;
     }
@@ -78,7 +69,7 @@ class UsersTable extends Table
      */
     public function buildRules(RulesChecker $rules)
     {
-        $rules->add($rules->isUnique(['username']));
+        $rules->add($rules->existsIn(['user_id'], 'Users'));
         return $rules;
     }
 }
