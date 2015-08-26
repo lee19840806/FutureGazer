@@ -14,6 +14,8 @@ use Cake\Validation\Validator;
  */
 class FilesTable extends Table
 {
+    private $mongoDatabase = 'DataFiles';
+    private $mongoCollection = 'Files';
 
     /**
      * Initialize method
@@ -71,5 +73,77 @@ class FilesTable extends Table
     {
         $rules->add($rules->existsIn(['user_id'], 'Users'));
         return $rules;
+    }
+    
+    public function saveFile($filePath = NULL, $fileName = NULL, $userID = NULL)
+    {
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+    
+        $document = array('UserID' => $userID, 'FileName' => $fileName, 'content' => array());
+        $handle = fopen($filePath, 'r');
+    
+        if ($handle !== FALSE)
+        {
+            $rowNumber = 0;
+            $header = [];
+    
+            while (($rowData = fgetcsv($handle, 0, ',')) !== FALSE)
+            {
+                foreach ($rowData as $key => $cell)
+                {
+                    $rowData[$key] = h($rowData[$key]);
+                }
+    
+                if ($rowNumber == 0)
+                {
+                    $header = $rowData;
+                }
+    
+                $row = array_merge(array('RowNum' => $rowNumber), array_combine($header, $rowData));
+                array_push($document['content'], $row);
+                $rowNumber++;
+            }
+            
+            fclose($handle);
+            unlink($filePath);
+    
+            $collectionFiles->insert($document);
+    
+            $file = $this->newEntity();
+            $file->user_id = $userID;
+            $file->name = h($fileName);
+            $this->save($file);
+        }
+    }
+    
+    public function isOwnedBy($fileID = NULL, $userID = NULL)
+    {
+        return $this->exists(['id' => $fileID, 'user_id' => $userID]);
+    }
+    
+    public function deleteFile($fileID = NULL, $userID = NULL)
+    {
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+    
+        $file = $this->get($fileID);
+        $fileName = $file->name;
+    
+        if ($this->delete($file))
+        {
+            if ($collectionFiles->remove(array('UserID' => $userID, 'FileName' => $fileName), array("justOne" => true)))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else
+        {
+            return false;
+        }
     }
 }

@@ -9,19 +9,19 @@
                     <h4><strong>Manage my data</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
-                    <form class="form-inline" enctype="multipart/form-data" action="Files/upload" method="POST">
+                    <form class="form-inline" enctype="multipart/form-data" action="/Files/upload" method="POST">
                         <div class="form-group">
-                            <input type="hidden" name="MAX_FILE_SIZE" value="30000" />
+                            <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
                         </div>
                         <div class="form-group has-success">
-                            <label for="exampleInputName2">Upload a CSV file: </label>
+                            <label for="exampleInputName2">Upload portfolio performance data (a CSV file): </label>
                             <div class="input-group input-group-sm">
-                                <input name="userfile" type="file" class="form-control" placeholder="Username" aria-describedby="basic-addon1">
+                                <input name="userfile" type="file" class="form-control" accept=".csv" required="true">
                                 <span class="input-group-btn"><button type="submit" class="btn btn-sm btn-success">Confirm and upload</button></span>
                             </div>
                         </div>
                     </form>
-                    <hr>
+                    <br>
                     <table class="table table-hover table-striped">
                         <thead>
                             <tr class="success">
