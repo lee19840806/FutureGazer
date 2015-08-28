@@ -6,22 +6,9 @@
         <div class="col-lg-10">
             <div class="row">
                 <div class="col-lg-12">
-                    <h4><strong>Manage my data</strong></h4>
+                    <h4><strong>List my data</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
-                    <form class="form-inline" enctype="multipart/form-data" action="/Files/upload" method="POST">
-                        <div class="form-group">
-                            <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
-                        </div>
-                        <div class="form-group has-success">
-                            <label for="exampleInputName2">Upload portfolio performance data (a CSV file): </label>
-                            <div class="input-group input-group-sm">
-                                <input name="userfile" type="file" class="form-control" accept=".csv" required="true">
-                                <span class="input-group-btn"><button type="submit" class="btn btn-sm btn-success">Confirm and upload</button></span>
-                            </div>
-                        </div>
-                    </form>
-                    <br>
                     <table class="table table-hover table-striped">
                         <thead>
                             <tr class="success">

@@ -10,7 +10,7 @@ use App\Controller\AppController;
  */
 class FilesController extends AppController
 {
-    public function index()
+    public function list_files()
     {
         $this->paginate = ['contain' => ['Users']];
         $this->set('files', $this->paginate($this->Files));
@@ -18,6 +18,11 @@ class FilesController extends AppController
     }
     
     public function upload()
+    {
+        
+    }
+    
+    public function submit()
     {
         if ($this->request->is('post'))
         {

@@ -13,8 +13,11 @@
     <title>Future Gazer</title>
 
     <link href="/css/bootstrap.css" rel="stylesheet">
+    <link href="/css/fileinput.css" rel="stylesheet">
     <script src="/js/jquery-2.1.4.js"></script>
     <script src="/js/bootstrap.js"></script>
+    <script src="/js/fileinput.js"></script>
+    <script src="/js/papaparse.js"></script>
 </head>
 
 <body>
