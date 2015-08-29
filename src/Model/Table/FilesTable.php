@@ -75,12 +75,12 @@ class FilesTable extends Table
         return $rules;
     }
     
-    public function saveFile($filePath = NULL, $fileName = NULL, $userID = NULL)
+    public function saveFile($filePath = NULL, $fileName = NULL, $dataType = NULL, $userID = NULL)
     {
         $mongoConnection = new \MongoClient();
         $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
     
-        $document = array('UserID' => $userID, 'FileName' => $fileName, 'content' => array());
+        $document = array('UserID' => $userID, 'FileName' => $fileName, 'Fields' => array(), 'Content' => array());
         $handle = fopen($filePath, 'r');
     
         if ($handle !== FALSE)
@@ -90,18 +90,33 @@ class FilesTable extends Table
     
             while (($rowData = fgetcsv($handle, 0, ',')) !== FALSE)
             {
-                foreach ($rowData as $key => $cell)
-                {
-                    $rowData[$key] = h($rowData[$key]);
-                }
-    
                 if ($rowNumber == 0)
                 {
                     $header = $rowData;
+                    
+                    foreach ($rowData as $key => $cell)
+                    {
+                        array_push($document['Fields'], $cell);
+                    }
                 }
-    
-                $row = array_merge(array('RowNum' => $rowNumber), array_combine($header, $rowData));
-                array_push($document['content'], $row);
+                else
+                {
+                    foreach ($rowData as $key => $cell)
+                    {
+                        if (array_values($dataType)[$key] == 'number')
+                        {
+                            $rowData[$key] = floatval($rowData[$key]);
+                        }
+                        else
+                        {
+                            $rowData[$key] = h($rowData[$key]);
+                        }
+                    }
+                    
+                    $row = array_merge(array('RowNum' => $rowNumber), array_combine($header, $rowData));
+                    array_push($document['Content'], $row);
+                }
+                
                 $rowNumber++;
             }
             
@@ -115,6 +130,18 @@ class FilesTable extends Table
             $file->name = h($fileName);
             $this->save($file);
         }
+    }
+    
+    public function viewFileContent($fileID = NULL, $userID = NULL)
+    {
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+    
+        $fileName = $this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name;
+    
+        $file = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Content.RowNum' => 0));
+        $file = array_merge($file, array('fileID' => $fileID));
+        return $file;
     }
     
     public function isOwnedBy($fileID = NULL, $userID = NULL)

@@ -32,14 +32,31 @@ class FilesController extends AppController
     
             if ($existed == null)
             {
-                $this->Files->saveFile($this->request->data['userfile']['tmp_name'], h($this->request->data['userfile']['name']), $this->Auth->user('id'));;
+                $this->Files->saveFile($this->request->data['userfile']['tmp_name'], h($this->request->data['userfile']['name']), 
+                    $this->request->data['dataType'], $this->Auth->user('id'));
+                
+                $this->Flash->set('The file has been uploaded successfully.', ['element' => 'success']);
+                $this->redirect(['action' => 'list_files']);
             }
             else
             {
                 $this->Flash->set('A file with the same name existed. Rename your file and upload agian.', ['element' => 'alert']);
+                $this->redirect(['action' => 'upload']);
             }
+        }
+    }
     
-            $this->redirect(['controller' => 'Files', 'action' => 'index']);
+    public function view($id = NULL)
+    {
+        if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
+        {
+            $file = $this->Files->viewFileContent($id, $this->Auth->user('id'));
+            $this->set('file', json_encode($file));
+        }
+        else
+        {
+            $this->Flash->error('You are not the owner of this file.');
+            $this->redirect(['action' => 'list_files']);
         }
     }
     
@@ -63,6 +80,6 @@ class FilesController extends AppController
             $this->Flash->error('You are not the owner of this file.');
         }
     
-        $this->redirect(['controller' => 'Files', 'action' => 'index']);
+        $this->redirect(['action' => 'list_files']);
     }
 }

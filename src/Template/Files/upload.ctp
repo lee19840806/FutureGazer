@@ -20,7 +20,7 @@
                         <br>
                         <hr>
                         <br>
-                        <div class="form-group">
+                        <div id="step2" class="form-group">
                             <p><label>Step 2. Config the data types of each column: </label></p>
                             <table class="table table-condensed table-striped table-hover">
                                 <thead>
@@ -33,7 +33,7 @@
                                     <tr>
                                         <td>id</td>
                                         <td>
-                                            <select>
+                                            <select name="dataType['id']">
                                                 <option value="string" selected="selected">String</option>
                                                 <option value="number">Number</option>
                                             </select>
@@ -45,11 +45,17 @@
                         <br>
                         <hr>
                         <br>
-                        <div class="form-group">
+                        <div id="step3"  class="form-group">
                             <p><label for="userfile">Step 3. Click "Upload data" to upload the data to the platform</label></p>
-                            <button type="submit" class="btn btn-sm btn-success" style="width: 150px;"><strong>Upload Data</strong></button>
+                            <button id="submitBtn" type="submit" class="btn btn-sm btn-success" style="width: 150px;">
+                                <strong>Upload Data</strong>
+                            </button>
                         </div>
                     </form>
+                    <br>
+                    <br>
+                    <br>
+                    <br>
                 </div>
             </div>
         </div>
@@ -59,6 +65,8 @@
 $(document).on('ready', function(){
     var tbody = $('#dataTypeSelection');
     tbody.empty();
+    $("#step2").hide();
+    $("#step3").hide();
     
     $("#userFileUpload").fileinput({
         browseClass: "btn btn-primary",
@@ -75,11 +83,13 @@ $(document).on('ready', function(){
             	complete: function(results) {
             	    console.log(results);
 
+            	    $("#step2").slideDown('fast');
+            	    $("#step3").slideDown('fast');
             	    tbody.empty();
             	    
             	    $.each(results.meta.fields, function(index, value) {
                 	    var columnName = $('<td>').html(value);
-                	    var dataType = $('<td>').append($('<select>')).children()
+                	    var dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
                 	       .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
                 	       .append($('<option>').attr('value', 'number').html('Number'));
              	       
@@ -91,6 +101,8 @@ $(document).on('ready', function(){
     });
 
     $('#userFileUpload').on('fileclear', function(event) {
+        $("#step2").slideUp('fast');
+        $("#step3").slideUp('fast');
         tbody.empty();
     });
 });
