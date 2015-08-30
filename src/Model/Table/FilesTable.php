@@ -137,10 +137,11 @@ class FilesTable extends Table
         $mongoConnection = new \MongoClient();
         $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
     
-        $fileName = $this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name;
+        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name);
     
         $file = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Content.RowNum' => 0));
         $file = array_merge($file, array('fileID' => $fileID));
+        
         return $file;
     }
     

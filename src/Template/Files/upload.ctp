@@ -24,7 +24,7 @@
                             <p><label>Step 2. Config the data types of each column: </label></p>
                             <table class="table table-condensed table-striped table-hover">
                                 <thead>
-                                    <tr>
+                                    <tr class="success">
                                         <th>Column Name</th>
                                         <th>Data Type</th>
                                     </tr>

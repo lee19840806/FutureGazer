@@ -9,7 +9,7 @@
                     <h4><strong>Learn from tutorials</strong></h4>
                     <hr>
                     <p><strong>
-                        <a href="https://www.lendingclub.com"><span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span> Click here</a>
+                        <a href="/files/lending_club.csv"><span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span> Click here</a>
                          to download the Lending Club portfolio performance data as an example, and try building a forecast model.
                     </strong></p>
                 </div>

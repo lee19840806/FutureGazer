@@ -12,6 +12,6 @@
                 <li><a href="/Files/list_files"><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> List my data</a></li>
             </ul>
         </li>
-        <li role="presentation"><a href="#"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Build maturation curves</a></li>
+        <li role="presentation"><a href="/MaturationCurves/list_files"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Build maturation curves</a></li>
     </ul>
 </div>
