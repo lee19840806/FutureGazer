@@ -9,10 +9,15 @@
                     <h4><strong>View file</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
+                    <div id="loading" class="alert alert-success" role="alert">
+                        <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                        <span class="sr-only">Loading:</span>
+                        Loading data, please wait...
+                    </div>
                     <div class="panel panel-primary">
                         <div class="panel-heading"><?= json_decode($file)->FileName ?></div>
                         <div class="panel-body">
-                            <div id="data"></div>
+                            <div id="data" style="height: 700px; width: auto; overflow: hidden;"></div>
                         </div>
                     </div>
                 </div>
@@ -35,4 +40,6 @@ var handsonTable = new Handsontable(container, {
     colHeaders: file.Fields,
     contextMenu: false
     });
+
+$("#loading").remove();
 </script>

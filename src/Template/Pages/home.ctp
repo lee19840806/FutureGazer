@@ -1,5 +1,8 @@
 <div class="container-fluid">
     <div class="jumbotron" style="background: url(/img/cover2.jpg) no-repeat center center; background-size: cover; color: #e6e6e6;">
+        <br>
+        <br>
+        <br>
         <h1 class="text-center">Future Gazer</h1>
         <p class="text-center">The online portfolio forecast platform</p>
         <br>
@@ -13,5 +16,10 @@
                 <strong><span class="glyphicon glyphicon-education" aria-hidden="true"></span> Sign Up</strong>
             </a>
         </p>
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
     </div>
 </div>

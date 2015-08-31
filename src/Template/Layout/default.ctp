@@ -20,6 +20,7 @@
     <script src="/js/fileinput.js"></script>
     <script src="/js/papaparse.js"></script>
     <script src="/js/handsontable.full.js"></script>
+    <script src="/js/json3.js"></script>
 </head>
 
 <body>

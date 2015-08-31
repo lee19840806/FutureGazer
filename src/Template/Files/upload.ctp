@@ -9,7 +9,7 @@
                     <h4><strong>Upload data from a file</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
-                    <form enctype="multipart/form-data" action="/Files/submit" method="POST">
+                    <form id="fileUploadForm" enctype="multipart/form-data" action="/Files/submit" method="POST">
                         <div class="form-group">
                             <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
                         </div>
@@ -20,7 +20,7 @@
                         <br>
                         <hr>
                         <br>
-                        <div id="step2" class="form-group">
+                        <div id="step2" class="form-group" style="display: none;">
                             <p><label>Step 2. Config the data types of each column: </label></p>
                             <table class="table table-condensed table-striped table-hover">
                                 <thead>
@@ -45,7 +45,7 @@
                         <br>
                         <hr>
                         <br>
-                        <div id="step3"  class="form-group">
+                        <div id="step3"  class="form-group" style="display: none;">
                             <p><label for="userfile">Step 3. Click "Upload data" to upload the data to the platform</label></p>
                             <button id="submitBtn" type="submit" class="btn btn-sm btn-success" style="width: 150px;">
                                 <strong>Upload Data</strong>
@@ -65,8 +65,12 @@
 $(document).on('ready', function(){
     var tbody = $('#dataTypeSelection');
     tbody.empty();
-    $("#step2").hide();
-    $("#step3").hide();
+    
+    $("#submitBtn").click(function() {
+        $("#fileUploadForm").submit();
+        $(this).attr('disabled', 'disabled');
+        $(this).html('Uploading...');
+    });
     
     $("#userFileUpload").fileinput({
         browseClass: "btn btn-primary",
@@ -81,8 +85,6 @@ $(document).on('ready', function(){
                 header: true,
                 skipEmptyLines: true,
             	complete: function(results) {
-            	    console.log(results);
-
             	    $("#step2").slideDown('fast');
             	    $("#step3").slideDown('fast');
             	    tbody.empty();
