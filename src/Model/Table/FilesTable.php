@@ -145,6 +145,19 @@ class FilesTable extends Table
         return $file;
     }
     
+    public function getFields($fileID = NULL, $userID = NULL)
+    {
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+    
+        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name);
+    
+        $fields = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Fields' => 1));
+        $fields = array_merge($fields, array('fileID' => $fileID));
+    
+        return $fields;
+    }
+    
     public function isOwnedBy($fileID = NULL, $userID = NULL)
     {
         return $this->exists(['id' => $fileID, 'user_id' => $userID]);

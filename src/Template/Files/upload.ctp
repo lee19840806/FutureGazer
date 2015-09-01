@@ -46,7 +46,7 @@
                         <hr>
                         <br>
                         <div id="step3"  class="form-group" style="display: none;">
-                            <p><label for="userfile">Step 3. Click "Upload data" to upload the data to the platform</label></p>
+                            <p><label for="submitBtn">Step 3. Click "Upload data" to upload the data to the platform</label></p>
                             <button id="submitBtn" type="submit" class="btn btn-sm btn-success" style="width: 150px;">
                                 <strong>Upload Data</strong>
                             </button>

@@ -25,8 +25,8 @@ class MaturationCurvesController extends AppController
         
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
         {
-            $file = $this->Files->viewFileContent($id, $this->Auth->user('id'));
-            $this->set('file', json_encode($file));
+            $fields = $this->Files->getFields($id, $this->Auth->user('id'));
+            $this->set('fields', $fields);
         }
         else
         {
