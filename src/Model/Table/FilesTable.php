@@ -160,31 +160,87 @@ class FilesTable extends Table
     
     public function buildCurves($options = NULL, $userID = NULL)
     {
+        // MongoDB aggregation example (MongoShell version)
+        /*
+        db.Files.aggregate([
+        {$match: {UserID: 1, FileName: "lending_club.csv"}},
+        {$unwind: "$Content"},
+        {$group: {
+            _id: {term: "$Content.term", grade: "$Content.grade", MoB: "$Content.MoB"},
+            term: {$first: "$Content.term"},
+            grade: {$first: "$Content.grade"},
+            MoB: {$first: "$Content.MoB"},
+            charge_off_amount: {$sum: "$Content.charged_off_amount"}
+        }},
+        {$sort: {_id: 1}}
+        ],
+        {allowDiskUse: true}
+        )
+        */
+        
         $mongoConnection = new \MongoClient();
         $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
     
         $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $options['fileID'], 'user_id' => $userID])->first()->name);
+        $fields = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Fields' => 1));
         
         $pipelineOrigination = array(
             array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
             array('$unwind' => '$Content'),
-            array('$group' => array(
-                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade'),
-                'origination_amount' => array('$sum' => '$Content.origination_amount'))),
+            array('$group' => array('_id' => array())),
             array('$sort' => array('_id' => 1))
         );
         
         $pipelineChargeOff = array(
             array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
             array('$unwind' => '$Content'),
+            array('$group' => array('_id' => array())),
+            array('$sort' => array('_id' => 1))
+        );
+        
+        foreach ($options['segmentVariables'] as $fieldIndex)
+        {
+            $field = $fields['Fields'][$fieldIndex];
+            $pipelineOrigination[2]['$group']['_id'][$field] = '$Content.' . $field;
+            $pipelineOrigination[2]['$group'][$field] = array('$first' => '$Content.' . $field);
+            $pipelineChargeOff[2]['$group']['_id'][$field] = '$Content.' . $field;
+            $pipelineChargeOff[2]['$group'][$field] = array('$first' => '$Content.' . $field);
+        }
+        
+        $originationVariable = $fields['Fields'][$options['origination']];
+        $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
+        
+        $chargeOffAmountVariable = $fields['Fields'][$options['chargeOff']];
+        $MoBVariable = $fields['Fields'][$options['MoB']];
+        $pipelineChargeOff[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
+        $pipelineChargeOff[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
+        $pipelineChargeOff[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
+        
+        $pipelineOriginationSample = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array(
+                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade'),
+                'term' => array('$first' => '$Content.term'),
+                'grade' => array('$first' => '$Content.grade'),
+                'origination_amount' => array('$sum' => '$Content.origination_amount'))),
+            array('$sort' => array('_id' => 1))
+        );
+        
+        $pipelineChargeOffSample = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
             array('$group' => array(
                 '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade', 'MoB' => '$Content.MoB'),
+                'term' => array('$first' => '$Content.term'),
+                'grade' => array('$first' => '$Content.grade'),
+                'MoB' => array('$first' => '$Content.MoB'),
                 'charge_off_amount' => array('$sum' => '$Content.charged_off_amount'))),
             array('$sort' => array('_id' => 1))
         );
         
-        $origination = $collectionFiles->aggregate($pipelineOrigination);
-        $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff);
+        $origination = $collectionFiles->aggregate($pipelineOrigination, array('allowDiskUse' => true));
+        $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff, array('allowDiskUse' => true));
     
         $a = 1;
         

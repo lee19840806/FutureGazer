@@ -19,7 +19,7 @@
                                             <div class="panel-heading">Segmentation variables</div>
                                             <div class="panel-body">
                                                 <p>Define segments by selecting one or more variables</p>
-                                                <?= $this->Form->select('groupVariables', $fields['Fields'], ['multiple' => 'checkbox']) ?>
+                                                <?= $this->Form->select('segmentVariables', $fields['Fields'], ['multiple' => 'checkbox']) ?>
                                             </div>
                                         </div>
                                     </div>
