@@ -158,6 +158,42 @@ class FilesTable extends Table
         return $fields;
     }
     
+    public function buildCurves($options = NULL, $userID = NULL)
+    {
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+    
+        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $options['fileID'], 'user_id' => $userID])->first()->name);
+        
+        $pipelineOrigination = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array(
+                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade'),
+                'origination_amount' => array('$sum' => '$Content.origination_amount'))),
+            array('$sort' => array('_id' => 1))
+        );
+        
+        $pipelineChargeOff = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array(
+                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade', 'MoB' => '$Content.MoB'),
+                'charge_off_amount' => array('$sum' => '$Content.charged_off_amount'))),
+            array('$sort' => array('_id' => 1))
+        );
+        
+        $origination = $collectionFiles->aggregate($pipelineOrigination);
+        $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff);
+    
+        $a = 1;
+        
+        $fields = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Fields' => 1));
+        $fields = array_merge($fields, array('fileID' => $fileID));
+    
+        return $fields;
+    }
+    
     public function isOwnedBy($fileID = NULL, $userID = NULL)
     {
         return $this->exists(['id' => $fileID, 'user_id' => $userID]);

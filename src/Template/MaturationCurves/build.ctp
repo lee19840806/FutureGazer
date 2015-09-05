@@ -8,7 +8,9 @@
                 <div class="col-lg-12">
                     <h4><strong>Build maturation curves</strong></h4>
                     <hr>
-                    <form>
+                    <?= $this->Flash->render() ?>
+                    <form id="buildMaturationForm" action="/MaturationCurves/calculate" method="POST">
+                        <input type="hidden" name="fileID" value="<?= $fields['fileID'] ?>">
                         <div class="row">
                             <div class="col-lg-12">
                                 <div class="row">
@@ -23,9 +25,16 @@
                                     </div>
                                     <div class="col-lg-6">
                                         <div class="panel panel-primary">
-                                            <div class="panel-heading">Origination, charge off amount and date variables</div>
+                                            <div class="panel-heading">Maturation curve variables</div>
                                             <div class="panel-body">
-                                                
+                                                <p>Select the variable which represents <strong>origination amount</strong></p>
+                                                <?= $this->Form->select('origination', $fields['Fields']) ?>
+                                                <hr>
+                                                <p>Select the variable which represents <strong>charge off amount</strong></p>
+                                                <?= $this->Form->select('chargeOff', $fields['Fields']) ?>
+                                                <hr>
+                                                <p>Select the variable which represents <strong>months on book</strong></p>
+                                                <?= $this->Form->select('MoB', $fields['Fields']) ?>
                                             </div>
                                         </div>
                                     </div>
@@ -35,13 +44,17 @@
                         <hr>
                         <div class="row">
                             <div class="col-lg-12">
-                                <p><label for="buildCurves">Click "Build maturation curves" if you are ready</label></p>
+                                <p><strong>Click "Build maturation curves" if you are ready</strong></p>
                                 <button id="buildCurves" type="submit" class="btn btn-sm btn-success">
                                     <strong>Build maturation curves</strong>
                                 </button>
                             </div>
                         </div>
                     </form>
+                    <br>
+                    <br>
+                    <br>
+                    <br>
                 </div>
             </div>
         </div>

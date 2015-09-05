@@ -34,4 +34,32 @@ class MaturationCurvesController extends AppController
             $this->redirect(['action' => 'list_files']);
         }
     }
+    
+    public function calculate()
+    {
+        if ($this->request->is('post'))
+        {
+            if (in_array($this->request->data['origination'], $this->request->data['groupVariables'])
+                or in_array($this->request->data['chargeOff'], $this->request->data['groupVariables'])
+                or in_array($this->request->data['MoB'], $this->request->data['groupVariables']))
+            {
+                $this->Flash->alert('Group variables cannot be selected as one of maturation curve variables, please choose proper variables.');
+                $this->redirect(['action' => 'build', $this->request->data['fileID']]);
+                return;
+            }
+            
+            $this->loadModel('Files');
+        
+            if ($this->Files->isOwnedBy($this->request->data['fileID'], $this->Auth->user('id')))
+            {
+                $fields = $this->Files->buildCurves($this->request->data, $this->Auth->user('id'));
+                $this->set('fields', $fields);
+            }
+            else
+            {
+                $this->Flash->error('You are not the owner of this file.');
+                $this->redirect(['action' => 'list_files']);
+            }
+        }
+    }
 }

@@ -1,5 +1,5 @@
-<div class="container-fluid">
-    <div class="jumbotron" style="background: url(/img/cover2.jpg) no-repeat center center; background-size: cover; color: #e6e6e6;">
+<div class="container-fluid" style="padding-left: 0px; padding-right: 0px;">
+    <div class="jumbotron" style="margin-top: -22px; background: url(/img/cover2.jpg) no-repeat center center; background-size: cover; color: #e6e6e6;">
         <br>
         <br>
         <br>

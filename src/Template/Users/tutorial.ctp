@@ -12,7 +12,7 @@
                 </ul>
                 
                 <div class="tab-content">
-                    <div role="tabpanel" class="tab-pane active" id="step1">
+                    <div role="tabpanel" class="tab-pane fade in active" id="step1">
                         <br>
                         <p>This tutorial will walk you through the model building process. You can switch between this window (the tutorial) 
                             and the modeling window (the model platform) as you follow tutorial instructions to build a vintage based forecast model.
@@ -27,15 +27,15 @@
                         <br>
                         <p>The file has 7 columns, they are: term, grade, origination_vintage, origination_amount, charged_off_date, charged_off_amount, MoB.</p>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="step2">
+                    <div role="tabpanel" class="tab-pane fade" id="step2">
                         <br>
                         <p>Under construction</p>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="step3">
+                    <div role="tabpanel" class="tab-pane fade" id="step3">
                         <br>
                         <p>Under construction</p>
                     </div>
-                    <div role="tabpanel" class="tab-pane" id="step4">
+                    <div role="tabpanel" class="tab-pane fade" id="step4">
                         <br>
                         <p>Under construction</p>
                     </div>
