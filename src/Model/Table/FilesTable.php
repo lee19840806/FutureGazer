@@ -241,6 +241,42 @@ class FilesTable extends Table
         
         $origination = $collectionFiles->aggregate($pipelineOrigination, array('allowDiskUse' => true));
         $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff, array('allowDiskUse' => true));
+        
+        $originationKeyValue = array();
+        
+        foreach ($origination['result'] as $value)
+        {
+            $key = '';
+            
+            foreach ($options['segmentVariables'] as $fieldIndex)
+            {
+                $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
+            }
+            
+            $key = substr($key, 0, strlen($key) - 1);
+            $originationKeyValue[$key] = $value[$originationVariable];
+        }
+        
+        $maturationCurves = array();
+        
+        foreach ($charge_off_MoB['result'] as $value)
+        {
+            $row = array();
+            $key = '';
+            
+            foreach ($options['segmentVariables'] as $fieldIndex)
+            {
+                $row[$fields['Fields'][$fieldIndex]] = $value[$fields['Fields'][$fieldIndex]];
+                $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
+            }
+            
+            $key = substr($key, 0, strlen($key) - 1);
+            $row[$originationVariable] = $originationKeyValue[$key];
+            $row[$MoBVariable] = $value[$MoBVariable];
+            $row[$chargeOffAmountVariable] = $value[$chargeOffAmountVariable];
+            
+            array_push($maturationCurves, $row);
+        }
     
         $a = 1;
         
