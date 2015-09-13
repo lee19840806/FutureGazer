@@ -6,6 +6,7 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Cake\Datasource\ConnectionManager;
 
 /**
  * Files Model
@@ -178,6 +179,22 @@ class FilesTable extends Table
         )
         */
         
+        // MySQL temporary table example
+        /*
+        drop temporary table IF EXISTS future_gazer.unique_term;
+        
+        create temporary table future_gazer.unique_term
+        (
+            term varchar(255)
+        );
+        
+        insert into future_gazer.unique_term
+        values ("36 months"), ("60 months");
+        
+        select *
+        from future_gazer.unique_term;
+        */
+        
         $mongoConnection = new \MongoClient();
         $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
     
@@ -208,10 +225,13 @@ class FilesTable extends Table
         }
         
         $originationVariable = $fields['Fields'][$options['origination']];
-        $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
-        
         $chargeOffAmountVariable = $fields['Fields'][$options['chargeOff']];
         $MoBVariable = $fields['Fields'][$options['MoB']];
+        
+        $pipelineOrigination[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
+        $pipelineOrigination[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
+        $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
+        
         $pipelineChargeOff[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
         $pipelineChargeOff[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
         $pipelineChargeOff[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
@@ -253,7 +273,7 @@ class FilesTable extends Table
                 $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
             }
             
-            $key = substr($key, 0, strlen($key) - 1);
+            $key = $key . $value[$MoBVariable];
             $originationKeyValue[$key] = $value[$originationVariable];
         }
         
@@ -270,13 +290,20 @@ class FilesTable extends Table
                 $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
             }
             
-            $key = substr($key, 0, strlen($key) - 1);
+            $key = $key . $value[$MoBVariable];
             $row[$originationVariable] = $originationKeyValue[$key];
             $row[$MoBVariable] = $value[$MoBVariable];
             $row[$chargeOffAmountVariable] = $value[$chargeOffAmountVariable];
+            $row['charge_off_rate'] = $row[$chargeOffAmountVariable] / $row[$originationVariable];
             
             array_push($maturationCurves, $row);
         }
+        
+        $connection = ConnectionManager::get('default');
+        $connection->execute('drop temporary table IF EXISTS future_gazer.unique_term;');
+        $connection->execute('create temporary table future_gazer.unique_term (term varchar(255));');
+        $connection->execute('insert into future_gazer.unique_term values ("36 months"), ("60 months");');
+        $results = $connection->execute('select * from future_gazer.unique_term;')->fetchAll('assoc');
     
         $a = 1;
         
