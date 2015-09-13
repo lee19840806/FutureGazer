@@ -171,6 +171,7 @@ class FilesTable extends Table
             term: {$first: "$Content.term"},
             grade: {$first: "$Content.grade"},
             MoB: {$first: "$Content.MoB"},
+            origination_amount: {$sum: "$Content.origination_amount"},
             charge_off_amount: {$sum: "$Content.charged_off_amount"}
         }},
         {$sort: {_id: 1}}
@@ -191,8 +192,38 @@ class FilesTable extends Table
         insert into future_gazer.unique_term
         values ("36 months"), ("60 months");
         
-        select *
-        from future_gazer.unique_term;
+        drop temporary table IF EXISTS future_gazer.unique_grade;
+        
+        create temporary table future_gazer.unique_grade
+        (
+            grade varchar(255)
+        );
+        
+        insert into future_gazer.unique_grade
+        values ("A"), ("B"), ("C"), ("D"), ("E"), ("F"), ("G");
+        
+        drop temporary table IF EXISTS future_gazer.maturation_curves_raw;
+        
+        create temporary table future_gazer.maturation_curves_raw
+        (
+            term varchar(255),
+            grade varchar(255),
+            MoB int(11),
+            origination_amount float,
+            charge_off_amount float
+        );
+        
+        insert into future_gazer.maturation_curves_raw
+        values ("36 months", "A", 0, 1000, 0), ("36 months", "A", 5, 1000, 10), ("60 months", "B", 7, 2000, 300);
+        
+        select term.term, grade.grade, MoB.number as MoB, temp_maturation.origination_amount, temp_maturation.charge_off_amount
+        from future_gazer.unique_term as term
+            cross join future_gazer.unique_grade as grade
+            cross join future_gazer.numbers as MoB
+            left join future_gazer.maturation_curves_raw as temp_maturation
+            on term.term = temp_maturation.term and grade.grade = temp_maturation.grade and MoB.number = temp_maturation.MoB
+        where MoB.number <= 67
+        order by term.term, grade.grade, MoB.number;
         */
         
         $mongoConnection = new \MongoClient();
@@ -200,6 +231,22 @@ class FilesTable extends Table
     
         $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $options['fileID'], 'user_id' => $userID])->first()->name);
         $fields = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Fields' => 1));
+        
+        $originationVariable = $fields['Fields'][$options['origination']];
+        $chargeOffAmountVariable = $fields['Fields'][$options['chargeOff']];
+        $MoBVariable = $fields['Fields'][$options['MoB']];
+        
+        if ($options['segmentVariables'] == null)
+        {
+            $options['segmentVariables'] = array();
+        }
+        
+        $pipeline = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array('_id' => array())),
+            array('$sort' => array('_id' => 1))
+        );
         
         $pipelineOrigination = array(
             array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
@@ -215,67 +262,73 @@ class FilesTable extends Table
             array('$sort' => array('_id' => 1))
         );
         
+        $sqlIndex = array();
+        
         foreach ($options['segmentVariables'] as $fieldIndex)
         {
             $field = $fields['Fields'][$fieldIndex];
-            $pipelineOrigination[2]['$group']['_id'][$field] = '$Content.' . $field;
-            $pipelineOrigination[2]['$group'][$field] = array('$first' => '$Content.' . $field);
-            $pipelineChargeOff[2]['$group']['_id'][$field] = '$Content.' . $field;
-            $pipelineChargeOff[2]['$group'][$field] = array('$first' => '$Content.' . $field);
+            
+            $sqlIndex[$field] = $this->preparePipelineUniqueField($userID, $fileName, $field);
+            
+            $pipeline[2]['$group']['_id'][$field] = '$Content.' . $field;
+            $pipeline[2]['$group'][$field] = array('$first' => '$Content.' . $field);
+            
+//             $pipelineOrigination[2]['$group']['_id'][$field] = '$Content.' . $field;
+//             $pipelineOrigination[2]['$group'][$field] = array('$first' => '$Content.' . $field);
+//             $pipelineChargeOff[2]['$group']['_id'][$field] = '$Content.' . $field;
+//             $pipelineChargeOff[2]['$group'][$field] = array('$first' => '$Content.' . $field);
         }
         
-        $originationVariable = $fields['Fields'][$options['origination']];
-        $chargeOffAmountVariable = $fields['Fields'][$options['chargeOff']];
-        $MoBVariable = $fields['Fields'][$options['MoB']];
+        $pipeline[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
+        $pipeline[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
+        $pipeline[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
+        $pipeline[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
         
-        $pipelineOrigination[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
-        $pipelineOrigination[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
-        $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
+//         $pipelineOrigination[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
+//         $pipelineOrigination[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
+//         $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
         
-        $pipelineChargeOff[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
-        $pipelineChargeOff[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
-        $pipelineChargeOff[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
+//         $pipelineChargeOff[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
+//         $pipelineChargeOff[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
+//         $pipelineChargeOff[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
         
-        $pipelineOriginationSample = array(
-            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
-            array('$unwind' => '$Content'),
-            array('$group' => array(
-                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade'),
-                'term' => array('$first' => '$Content.term'),
-                'grade' => array('$first' => '$Content.grade'),
-                'origination_amount' => array('$sum' => '$Content.origination_amount'))),
-            array('$sort' => array('_id' => 1))
-        );
+        $maturationRawData = $collectionFiles->aggregate($pipeline, array('allowDiskUse' => true));
         
-        $pipelineChargeOffSample = array(
-            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
-            array('$unwind' => '$Content'),
-            array('$group' => array(
-                '_id' => array('term' => '$Content.term', 'grade' => '$Content.grade', 'MoB' => '$Content.MoB'),
-                'term' => array('$first' => '$Content.term'),
-                'grade' => array('$first' => '$Content.grade'),
-                'MoB' => array('$first' => '$Content.MoB'),
-                'charge_off_amount' => array('$sum' => '$Content.charged_off_amount'))),
-            array('$sort' => array('_id' => 1))
-        );
+        $maxMoB = $this->prepareMaxMoB($userID, $fileName, $MoBVariable);
+        $fullIndex = $this->prepareFullIndex($sqlIndex, $MoBVariable, $maxMoB, $originationVariable, $chargeOffAmountVariable, $maturationRawData['result']);
         
-        $origination = $collectionFiles->aggregate($pipelineOrigination, array('allowDiskUse' => true));
-        $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff, array('allowDiskUse' => true));
+//         $origination = $collectionFiles->aggregate($pipelineOrigination, array('allowDiskUse' => true));
+//         $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff, array('allowDiskUse' => true));
         
-        $originationKeyValue = array();
+        $maturationRawDataKeyValue = array();
         
-        foreach ($origination['result'] as $value)
+        foreach ($maturationRawData['result'] as $row)
         {
             $key = '';
-            
+        
             foreach ($options['segmentVariables'] as $fieldIndex)
             {
-                $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
+                $key = $key . $row[$fields['Fields'][$fieldIndex]] . ':';
             }
-            
-            $key = $key . $value[$MoBVariable];
-            $originationKeyValue[$key] = $value[$originationVariable];
+        
+            $key = $key . $row[$MoBVariable];
+            $maturationRawDataKeyValue[$key] = $row[$originationVariable];
         }
+        
+//         $originationKeyValue = array();
+        
+//         foreach ($origination['result'] as $value)
+//         {
+//             $key = '';
+            
+//             foreach ($options['segmentVariables'] as $fieldIndex)
+//             {
+//                 $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
+//             }
+            
+//             $key = $key . $value[$MoBVariable];
+//             $originationKeyValue[$key] = $value[$originationVariable];
+//         }
         
         $maturationCurves = array();
         
@@ -291,19 +344,13 @@ class FilesTable extends Table
             }
             
             $key = $key . $value[$MoBVariable];
-            $row[$originationVariable] = $originationKeyValue[$key];
             $row[$MoBVariable] = $value[$MoBVariable];
+            $row[$originationVariable] = $originationKeyValue[$key];
             $row[$chargeOffAmountVariable] = $value[$chargeOffAmountVariable];
             $row['charge_off_rate'] = $row[$chargeOffAmountVariable] / $row[$originationVariable];
             
             array_push($maturationCurves, $row);
         }
-        
-        $connection = ConnectionManager::get('default');
-        $connection->execute('drop temporary table IF EXISTS future_gazer.unique_term;');
-        $connection->execute('create temporary table future_gazer.unique_term (term varchar(255));');
-        $connection->execute('insert into future_gazer.unique_term values ("36 months"), ("60 months");');
-        $results = $connection->execute('select * from future_gazer.unique_term;')->fetchAll('assoc');
     
         $a = 1;
         
@@ -311,6 +358,100 @@ class FilesTable extends Table
         $fields = array_merge($fields, array('fileID' => $fileID));
     
         return $fields;
+    }
+    
+    private function preparePipelineUniqueField($userID = NULL, $fileName = NULL, $field = NULL)
+    {
+        $pipeline = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array('_id' => array($field => '$Content.' . $field), 'uniqueValue' => array('$first' => '$Content.' . $field))),
+            array('$sort' => array('_id' => 1))
+        );
+        
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+        $mongoResult = $collectionFiles->aggregate($pipeline, array('allowDiskUse' => true));
+        
+        $sqlInsertValues = '("';
+        
+        foreach ($mongoResult['result'] as $value)
+        {
+            $sqlInsertValues .= $value['uniqueValue'] . '"),("';
+        }
+        
+        $sqlInsertValues = substr($sqlInsertValues, 0, strlen($sqlInsertValues) - 3);
+        
+        return $sqlInsertValues;
+    }
+    
+    private function prepareMaxMoB($userID = NULL, $fileName = NULL, $field = NULL)
+    {
+        $pipeline = array(
+            array('$match' => array('UserID' => $userID, 'FileName' => $fileName)),
+            array('$unwind' => '$Content'),
+            array('$group' => array('_id' => null, 'maxMoB' => array('$max' => '$Content.' . $field)))
+        );
+    
+        $mongoConnection = new \MongoClient();
+        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
+        $mongoResult = $collectionFiles->aggregate($pipeline, array('allowDiskUse' => true));
+        
+        return $mongoResult['result'][0]['maxMoB'];
+    }
+    
+    private function prepareFullIndex($segmentVariables = NULL, $MoBVariable = NULL, $maxMoB = NULL,
+        $originationVariable = NULL, $chargeOffAmountVariable = NULL, $maturationCurvesRaw = NULL)
+    {
+        $connection = ConnectionManager::get('default');
+        $databaseName = $connection->config()['database'];
+        $select = 'SELECT ';
+        $from = ' FROM ';
+        $where = ' WHERE MoB.number <= ' . $maxMoB;
+        $order = ' ORDER BY ';
+        
+        $maturationRawColumns = '';
+        
+        foreach ($segmentVariables as $key => $value)
+        {
+            $temporaryTableName = $databaseName . '.unique_' . $key;
+            
+            $connection->execute('drop temporary table IF EXISTS ' . $temporaryTableName);
+            $connection->execute('create temporary table ' . $temporaryTableName . ' (' . $key . ' varchar(255))');
+            $connection->execute('insert into ' . $temporaryTableName . ' values ' . $value);
+            
+            $select .= $key . '.' . $key . ', ';
+            $from .= $temporaryTableName . ' as ' . $key . ', ';
+            $order .= $key . '.' . $key . ', ';
+            
+            $maturationRawColumns .= $key . ' varchar(255), ';
+        }
+        
+        $maturationRawColumns .= $MoBVariable . ' int(11), ' . $originationVariable . ' float, ' . $chargeOffAmountVariable . ' float';
+        $connection->execute('drop temporary table IF EXISTS ' . $databaseName . '.maturation_curves_raw');
+        $connection->execute('create temporary table ' . $databaseName . '.maturation_curves_raw' . ' (' . $maturationRawColumns . ')');
+        
+        foreach ($maturationCurvesRaw as $row)
+        {
+            $insert = 'insert into ' . $databaseName . '.maturation_curves_raw value (';
+            
+            foreach ($segmentVariables as $key => $value)
+            {
+                $insert .= '"' . $row[$key] . '", ';
+            }
+            
+            $insert .= '' . $row[$MoBVariable] . ', ' . $row[$originationVariable] . ', ' . $row[$chargeOffAmountVariable] . ')';
+            $connection->execute($insert);
+        }
+        
+        // To be done: implement the cross join and left join SQL statement to get the full-indexed maturation curves
+        
+        $select .= 'MoB.number as ' . $MoBVariable;
+        $from .= $databaseName . '.numbers as ' . $MoBVariable;
+        $order .= 'MoB.number';
+        
+        $results = $connection->execute($select . $from . $where . $order)->fetchAll('assoc');
+        return $results;
     }
     
     public function isOwnedBy($fileID = NULL, $userID = NULL)

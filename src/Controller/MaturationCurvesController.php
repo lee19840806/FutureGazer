@@ -39,18 +39,13 @@ class MaturationCurvesController extends AppController
     {
         if ($this->request->is('post'))
         {
-            if (in_array($this->request->data['origination'], $this->request->data['segmentVariables'])
-                or in_array($this->request->data['chargeOff'], $this->request->data['segmentVariables'])
-                or in_array($this->request->data['MoB'], $this->request->data['segmentVariables']))
+            $segmentVariables = ($this->request->data['segmentVariables'] == null) ? array() : $this->request->data['segmentVariables'];
+            
+            if (in_array($this->request->data['origination'], $segmentVariables)
+                or in_array($this->request->data['chargeOff'], $segmentVariables)
+                or in_array($this->request->data['MoB'], $segmentVariables))
             {
                 $this->Flash->alert('Segment variables cannot be selected as one of maturation curve variables, please choose proper variables.');
-                $this->redirect(['action' => 'build', $this->request->data['fileID']]);
-                return;
-            }
-            
-            if (count($this->request->data['segmentVariables']) == 0)
-            {
-                $this->Flash->alert('Please select at least one field as segment variable.');
                 $this->redirect(['action' => 'build', $this->request->data['fileID']]);
                 return;
             }
