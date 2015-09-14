@@ -210,18 +210,20 @@ class FilesTable extends Table
             grade varchar(255),
             MoB int(11),
             origination_amount float,
-            charge_off_amount float
+            charged_off_amount float
         );
         
         insert into future_gazer.maturation_curves_raw
         values ("36 months", "A", 0, 1000, 0), ("36 months", "A", 5, 1000, 10), ("60 months", "B", 7, 2000, 300);
         
-        select term.term, grade.grade, MoB.number as MoB, temp_maturation.origination_amount, temp_maturation.charge_off_amount
-        from future_gazer.unique_term as term
+        select term.term, grade.grade, MoB.number as MoB, mc.origination_amount, mc.charged_off_amount,
+            case when mc.charged_off_amount / mc.origination_amount is null then 0
+                 else mc.charged_off_amount / mc.origination_amount end as charge_off_rate
+        from future_gazer.numbers as MoB
+            cross join future_gazer.unique_term as term
             cross join future_gazer.unique_grade as grade
-            cross join future_gazer.numbers as MoB
-            left join future_gazer.maturation_curves_raw as temp_maturation
-            on term.term = temp_maturation.term and grade.grade = temp_maturation.grade and MoB.number = temp_maturation.MoB
+            left join future_gazer.maturation_curves_raw as mc
+            on MoB.number = mc.MoB and term.term = mc.term and grade.grade = mc.grade
         where MoB.number <= 67
         order by term.term, grade.grade, MoB.number;
         */
@@ -272,11 +274,6 @@ class FilesTable extends Table
             
             $pipeline[2]['$group']['_id'][$field] = '$Content.' . $field;
             $pipeline[2]['$group'][$field] = array('$first' => '$Content.' . $field);
-            
-//             $pipelineOrigination[2]['$group']['_id'][$field] = '$Content.' . $field;
-//             $pipelineOrigination[2]['$group'][$field] = array('$first' => '$Content.' . $field);
-//             $pipelineChargeOff[2]['$group']['_id'][$field] = '$Content.' . $field;
-//             $pipelineChargeOff[2]['$group'][$field] = array('$first' => '$Content.' . $field);
         }
         
         $pipeline[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
@@ -284,80 +281,12 @@ class FilesTable extends Table
         $pipeline[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
         $pipeline[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
         
-//         $pipelineOrigination[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
-//         $pipelineOrigination[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
-//         $pipelineOrigination[2]['$group'][$originationVariable] = array('$sum' => '$Content.' . $originationVariable);
-        
-//         $pipelineChargeOff[2]['$group']['_id'][$MoBVariable] = '$Content.' . $MoBVariable;
-//         $pipelineChargeOff[2]['$group'][$MoBVariable] = array('$first' => '$Content.' . $MoBVariable);
-//         $pipelineChargeOff[2]['$group'][$chargeOffAmountVariable] = array('$sum' => '$Content.' . $chargeOffAmountVariable);
-        
         $maturationRawData = $collectionFiles->aggregate($pipeline, array('allowDiskUse' => true));
         
         $maxMoB = $this->prepareMaxMoB($userID, $fileName, $MoBVariable);
-        $fullIndex = $this->prepareFullIndex($sqlIndex, $MoBVariable, $maxMoB, $originationVariable, $chargeOffAmountVariable, $maturationRawData['result']);
-        
-//         $origination = $collectionFiles->aggregate($pipelineOrigination, array('allowDiskUse' => true));
-//         $charge_off_MoB = $collectionFiles->aggregate($pipelineChargeOff, array('allowDiskUse' => true));
-        
-        $maturationRawDataKeyValue = array();
-        
-        foreach ($maturationRawData['result'] as $row)
-        {
-            $key = '';
-        
-            foreach ($options['segmentVariables'] as $fieldIndex)
-            {
-                $key = $key . $row[$fields['Fields'][$fieldIndex]] . ':';
-            }
-        
-            $key = $key . $row[$MoBVariable];
-            $maturationRawDataKeyValue[$key] = $row[$originationVariable];
-        }
-        
-//         $originationKeyValue = array();
-        
-//         foreach ($origination['result'] as $value)
-//         {
-//             $key = '';
-            
-//             foreach ($options['segmentVariables'] as $fieldIndex)
-//             {
-//                 $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
-//             }
-            
-//             $key = $key . $value[$MoBVariable];
-//             $originationKeyValue[$key] = $value[$originationVariable];
-//         }
-        
-        $maturationCurves = array();
-        
-        foreach ($charge_off_MoB['result'] as $value)
-        {
-            $row = array();
-            $key = '';
-            
-            foreach ($options['segmentVariables'] as $fieldIndex)
-            {
-                $row[$fields['Fields'][$fieldIndex]] = $value[$fields['Fields'][$fieldIndex]];
-                $key = $key . $value[$fields['Fields'][$fieldIndex]] . ':';
-            }
-            
-            $key = $key . $value[$MoBVariable];
-            $row[$MoBVariable] = $value[$MoBVariable];
-            $row[$originationVariable] = $originationKeyValue[$key];
-            $row[$chargeOffAmountVariable] = $value[$chargeOffAmountVariable];
-            $row['charge_off_rate'] = $row[$chargeOffAmountVariable] / $row[$originationVariable];
-            
-            array_push($maturationCurves, $row);
-        }
+        $maturationCurves = $this->prepareMaturationCurve($sqlIndex, $MoBVariable, $maxMoB, $originationVariable, $chargeOffAmountVariable, $maturationRawData['result']);
     
-        $a = 1;
-        
-        $fields = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Fields' => 1));
-        $fields = array_merge($fields, array('fileID' => $fileID));
-    
-        return $fields;
+        return $maturationCurves;
     }
     
     private function preparePipelineUniqueField($userID = NULL, $fileName = NULL, $field = NULL)
@@ -400,13 +329,14 @@ class FilesTable extends Table
         return $mongoResult['result'][0]['maxMoB'];
     }
     
-    private function prepareFullIndex($segmentVariables = NULL, $MoBVariable = NULL, $maxMoB = NULL,
+    private function prepareMaturationCurve($segmentVariables = NULL, $MoBVariable = NULL, $maxMoB = NULL,
         $originationVariable = NULL, $chargeOffAmountVariable = NULL, $maturationCurvesRaw = NULL)
     {
         $connection = ConnectionManager::get('default');
         $databaseName = $connection->config()['database'];
         $select = 'SELECT ';
-        $from = ' FROM ';
+        $from = ' FROM ' . $databaseName . '.numbers as ' . $MoBVariable;
+        $on = ' ON ' . $MoBVariable . '.number = mc.' . $MoBVariable;
         $where = ' WHERE MoB.number <= ' . $maxMoB;
         $order = ' ORDER BY ';
         
@@ -421,7 +351,8 @@ class FilesTable extends Table
             $connection->execute('insert into ' . $temporaryTableName . ' values ' . $value);
             
             $select .= $key . '.' . $key . ', ';
-            $from .= $temporaryTableName . ' as ' . $key . ', ';
+            $from .= ' CROSS JOIN ' . $temporaryTableName . ' as ' . $key;
+            $on .= ' and ' . $key . '.' . $key . ' = mc.' . $key;
             $order .= $key . '.' . $key . ', ';
             
             $maturationRawColumns .= $key . ' varchar(255), ';
@@ -444,13 +375,13 @@ class FilesTable extends Table
             $connection->execute($insert);
         }
         
-        // To be done: implement the cross join and left join SQL statement to get the full-indexed maturation curves
-        
-        $select .= 'MoB.number as ' . $MoBVariable;
-        $from .= $databaseName . '.numbers as ' . $MoBVariable;
+        $select .= 'MoB.number as ' . $MoBVariable . ', mc.' . $originationVariable . ', mc.' . $chargeOffAmountVariable;
+        $select .= ', case when mc.' . $chargeOffAmountVariable . ' / mc.' . $originationVariable . ' is null then 0 else '
+            . 'mc.' . $chargeOffAmountVariable . ' / mc.' . $originationVariable . ' end as charge_off_rate';
+        $from .= ' left join ' . $databaseName . '.maturation_curves_raw as mc';
         $order .= 'MoB.number';
         
-        $results = $connection->execute($select . $from . $where . $order)->fetchAll('assoc');
+        $results = $connection->execute($select . $from . $on . $where . $order)->fetchAll('assoc');
         return $results;
     }
     
