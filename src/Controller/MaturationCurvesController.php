@@ -54,9 +54,9 @@ class MaturationCurvesController extends AppController
         
             if ($this->Files->isOwnedBy($this->request->data['fileID'], $this->Auth->user('id')))
             {
-                $maturationCurves = $this->Files->buildCurves($this->request->data, $this->Auth->user('id'));
-                $this->set('maturationCurves', json_encode($maturationCurves));
-                $this->set('columnHeaders', json_encode(array_keys($maturationCurves[0])));
+                $maturation = $this->Files->buildCurves($this->request->data, $this->Auth->user('id'));
+                $this->set('maturation', json_encode($maturation, JSON_NUMERIC_CHECK));
+                $this->set('columnHeaders', json_encode(array_keys($maturation['curves'][0])));
             }
             else
             {

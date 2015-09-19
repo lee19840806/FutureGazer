@@ -285,8 +285,13 @@ class FilesTable extends Table
         
         $maxMoB = $this->prepareMaxMoB($userID, $fileName, $MoBVariable);
         $maturationCurves = $this->prepareMaturationCurve($sqlIndex, $MoBVariable, $maxMoB, $originationVariable, $chargeOffAmountVariable, $maturationRawData['result']);
+        
+        $maturation = array();
+        $maturation['segment'] = array_keys($sqlIndex);
+        $maturation['mob'] = $MoBVariable;
+        $maturation['curves'] = $maturationCurves;
     
-        return $maturationCurves;
+        return $maturation;
     }
     
     private function preparePipelineUniqueField($userID = NULL, $fileName = NULL, $field = NULL)
