@@ -37,7 +37,7 @@ var handsonTable = new Handsontable(container, {
     data: file.Content,
     minSpareRows: 0,
     rowHeaders: true,
-    colHeaders: file.Fields,
+    colHeaders: _.map(file.Fields, function(value, key) { return _.keys(value)[0]; }),
     contextMenu: false
     });
 

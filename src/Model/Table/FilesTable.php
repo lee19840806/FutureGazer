@@ -76,7 +76,7 @@ class FilesTable extends Table
         return $rules;
     }
     
-    public function saveFile($filePath = NULL, $fileName = NULL, $dataType = NULL, $userID = NULL)
+    public function saveFile($filePath = NULL, $fileName = NULL, $dataType = NULL, $csvMeta = NULL, $userID = NULL)
     {
         $mongoConnection = new \MongoClient();
         $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
@@ -89,7 +89,7 @@ class FilesTable extends Table
             $rowNumber = 0;
             $header = [];
     
-            while (($rowData = fgetcsv($handle, 0, ',')) !== FALSE)
+            while (($rowData = fgetcsv($handle, 0, $csvMeta['delimiter'])) !== FALSE)
             {
                 if ($rowNumber == 0)
                 {
@@ -97,7 +97,7 @@ class FilesTable extends Table
                     
                     foreach ($rowData as $key => $cell)
                     {
-                        array_push($document['Fields'], $cell);
+                        array_push($document['Fields'], array(h($cell) => array_values($dataType)[$key]));
                     }
                 }
                 else
@@ -131,6 +131,11 @@ class FilesTable extends Table
             $file->name = h($fileName);
             $this->save($file);
         }
+    }
+    
+    public function saveMaturation($fields = NULL, $curves = NULL, $dataType = NULL, $userID = NULL)
+    {
+        
     }
     
     public function viewFileContent($fileID = NULL, $userID = NULL)

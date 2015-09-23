@@ -9,11 +9,37 @@
                     <h4><strong>Build maturation curves</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
+                    <div id="success" class="alert alert-success" role="alert" style="display: none;">
+                        <span class="glyphicon glyphicon-ok-circle" aria-hidden="true"></span>
+                        <span class="sr-only">Success:</span>
+                        The maturation curves have been saved. You can view it from "Manage my data" in the left menu bar.
+                    </div>
+                    <div id="error" class="alert alert-warning" role="alert" style="display: none;">
+                        <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                        <span class="sr-only">Error:</span>
+                        An error has occured while trying to save the curves. Please try again later.
+                    </div>
                     <div id="loading" class="alert alert-success" role="alert">
                         <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
                         <span class="sr-only">Loading:</span>
                         Loading data, please wait...
                     </div>
+                    <div>
+                        <form class="form-inline">
+                            <div class="form-group">
+                                <label for="name">Name</label>
+                                <input type="text" class="form-control input-sm" id="inputName" placeholder="Data set name">
+                            </div>
+                            <div class="form-group">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                            <div class="form-group">
+                                <label for="description">Description</label>
+                                <input type="email" class="form-control input-sm" id="inputDescription" placeholder="Data set description">
+                            </div>
+                            <div class="form-group">&nbsp;&nbsp;&nbsp;&nbsp;</div>
+                            <button id="btnSaveData" class="btn btn-sm btn-success"><strong>Save for later use</strong></button>
+                        </form>
+                    </div>
+                    <hr>
                     <div id="legend"></div>
                     <div style="width:100%"><canvas id="myChart" width="900" height="350"></canvas></div>
                     <hr>
@@ -101,4 +127,55 @@ var handsonTable = new Handsontable(container, {
     });
 
 $("#loading").remove();
+
+$("#btnSaveData").click(function(event) {
+    event.preventDefault();
+
+    if ($("#inputName").val().length == 0)
+    {
+        alert("Please enter a name for the maturation curves data set.");
+        return;
+    }
+
+    if ($("#inputDescription").val().length == 0)
+    {
+        alert("Please enter a description for the maturation curves data set.");
+        return;
+    }
+
+    $("#btnSaveData").attr("disabled", "disabled");
+
+    $.ajax({
+        method: "POST",
+        url: "/MaturationCurves/saveMaturation",
+        data: {Fields: <?= $columnHeaders ?>, Content: <?= $maturation ?>}
+    })
+    .done(function() {
+        $("#success").hide();
+        $("#error").hide();
+        $("#success").show();
+    })
+    .error(function() {
+        $("#success").hide();
+        $("#error").hide();
+        $("#error").show();
+    })
+    .always(function() {
+        $("#btnSaveData").removeAttr("disabled");
+    });
+});
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

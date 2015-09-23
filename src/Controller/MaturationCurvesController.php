@@ -65,4 +65,28 @@ class MaturationCurvesController extends AppController
             }
         }
     }
+    
+    public function saveMaturation()
+    {
+        if ($this->request->is('post'))
+        {
+            $a = 1;
+        }
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

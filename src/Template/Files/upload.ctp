@@ -11,6 +11,7 @@
                     <?= $this->Flash->render() ?>
                     <form id="fileUploadForm" enctype="multipart/form-data" action="/Files/submit" method="POST">
                         <div class="form-group">
+                            <input id="csvMeta" type="hidden" name="csvMeta" />
                             <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
                         </div>
                         <div class="form-group">
@@ -21,7 +22,7 @@
                         <hr>
                         <br>
                         <div id="step2" class="form-group" style="display: none;">
-                            <p><label>Step 2. Config the data types of each column: </label></p>
+                            <p><label>Step 2. Select data type for each column: </label></p>
                             <table class="table table-condensed table-striped table-hover">
                                 <thead>
                                     <tr class="success">
@@ -46,7 +47,7 @@
                         <hr>
                         <br>
                         <div id="step3"  class="form-group" style="display: none;">
-                            <p><label for="submitBtn">Step 3. Click "Upload data" to upload the data to the platform</label></p>
+                            <p><label>Step 3. Click "Upload data" to upload the data to the platform</label></p>
                             <button id="submitBtn" type="submit" class="btn btn-sm btn-success" style="width: 150px;">
                                 <strong>Upload Data</strong>
                             </button>
@@ -85,15 +86,37 @@ $(document).on('ready', function(){
                 header: true,
                 skipEmptyLines: true,
             	complete: function(results) {
+            	    tbody.empty();
             	    $("#step2").slideDown('fast');
             	    $("#step3").slideDown('fast');
-            	    tbody.empty();
+            	    $("#csvMeta").val(JSON.stringify(results.meta));
             	    
             	    $.each(results.meta.fields, function(index, value) {
+                	    var isNumber = true;
+                	    var fieldName = this;
+                	    
+            	        $.each(results.data, function(dataIndex, dataValue) {
+            	            if (!$.isNumeric(dataValue[fieldName]) && (dataValue[fieldName] != ""))
+            	            {
+            	                isNumber = false;
+            	            }
+            	        });
+                	    
                 	    var columnName = $('<td>').html(value);
-                	    var dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
-                	       .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
-                	       .append($('<option>').attr('value', 'number').html('Number'));
+                	    var dataType;
+
+                	    if (isNumber)
+                	    {
+                	        dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
+                                .append($('<option>').attr('value', 'string').html('String'))
+                                .append($('<option>').attr('value', 'number').attr('selected', 'selected').html('Number'));
+                	    }
+                	    else
+                	    {
+                	        dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
+                                .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
+                                .append($('<option>').attr('value', 'number').html('Number'));
+                	    }
              	       
             	        tbody.append($('<tr>').append(columnName).append(dataType));
             	    });
@@ -105,6 +128,7 @@ $(document).on('ready', function(){
     $('#userFileUpload').on('fileclear', function(event) {
         $("#step2").slideUp('fast');
         $("#step3").slideUp('fast');
+        $("#csvMeta").val("");
         tbody.empty();
     });
 });

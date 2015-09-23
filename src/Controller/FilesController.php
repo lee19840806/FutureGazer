@@ -33,7 +33,7 @@ class FilesController extends AppController
             if ($existed == null)
             {
                 $this->Files->saveFile($this->request->data['userfile']['tmp_name'], h($this->request->data['userfile']['name']), 
-                    $this->request->data['dataType'], $this->Auth->user('id'));
+                    $this->request->data['dataType'], json_decode($this->request->data['csvMeta'], true), $this->Auth->user('id'));
                 
                 $this->Flash->set('The file has been uploaded successfully.', ['element' => 'success']);
                 $this->redirect(['action' => 'list_files']);
