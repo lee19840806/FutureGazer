@@ -9,7 +9,7 @@
                     <h4><strong>Upload data from a file</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
-                    <form id="fileUploadForm" enctype="multipart/form-data" action="/Files/submit" method="POST">
+                    <form id="fileUploadForm" enctype="multipart/form-data" action="/Files/submitFile" method="POST">
                         <div class="form-group">
                             <input id="csvMeta" type="hidden" name="csvMeta" />
                             <input type="hidden" name="MAX_FILE_SIZE" value="1000000" />
@@ -34,7 +34,7 @@
                                     <tr>
                                         <td>id</td>
                                         <td>
-                                            <select name="dataType['id']">
+                                            <select name="dataType[id]">
                                                 <option value="string" selected="selected">String</option>
                                                 <option value="number">Number</option>
                                             </select>
@@ -107,13 +107,13 @@ $(document).on('ready', function(){
 
                 	    if (isNumber)
                 	    {
-                	        dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
+                	        dataType = $('<td>').append($('<select>').attr('name', "dataType[" + value + "]")).children()
                                 .append($('<option>').attr('value', 'string').html('String'))
                                 .append($('<option>').attr('value', 'number').attr('selected', 'selected').html('Number'));
                 	    }
                 	    else
                 	    {
-                	        dataType = $('<td>').append($('<select>').attr('name', "dataType['" + value + "']")).children()
+                	        dataType = $('<td>').append($('<select>').attr('name', "dataType[" + value + "]")).children()
                                 .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
                                 .append($('<option>').attr('value', 'number').html('Number'));
                 	    }

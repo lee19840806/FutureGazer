@@ -12,6 +12,8 @@ use Cake\Datasource\ConnectionManager;
  * Files Model
  *
  * @property \Cake\ORM\Association\BelongsTo $Users
+ * @property \Cake\ORM\Association\HasMany $FileFields
+ * @property \Cake\ORM\Association\HasOne $FileContents
  */
 class FilesTable extends Table
 {
@@ -37,6 +39,18 @@ class FilesTable extends Table
         $this->belongsTo('Users', [
             'foreignKey' => 'user_id',
             'joinType' => 'INNER'
+        ]);
+        
+        $this->hasMany('FileFields', [
+            'foreignKey' => 'file_id',
+            'sort' => ['FileFields.index' => 'DESC'],
+            'dependent' => true
+        ]);
+        
+        $this->hasOne('FileContents', [
+            'className' => 'FileContents',
+            'foreignKey' => 'file_id',
+            'dependent' => true
         ]);
     }
 
@@ -76,6 +90,7 @@ class FilesTable extends Table
         return $rules;
     }
     
+    /*
     public function saveFile($filePath = NULL, $fileName = NULL, $dataType = NULL, $csvMeta = NULL, $userID = NULL)
     {
         $mongoConnection = new \MongoClient();
@@ -130,6 +145,77 @@ class FilesTable extends Table
             $file->user_id = $userID;
             $file->name = h($fileName);
             $this->save($file);
+        }
+    }
+    */
+    
+    public function saveFileToMySQL($filePath = NULL, $fileName = NULL, $dataType = NULL, $csvMeta = NULL, $userID = NULL)
+    {
+        $handle = fopen($filePath, 'r');
+    
+        if ($handle !== FALSE)
+        {
+            $fields = [];
+            $content = [];
+            $rowNumber = 0;
+            
+            while (($rowData = fgetcsv($handle, 0, $csvMeta['delimiter'])) !== FALSE)
+            {
+                if ($rowNumber == 0)
+                {
+                    foreach ($rowData as $key => $cell)
+                    {
+                        array_push($fields, array('index' => $key + 1, 'name' => h($cell), 'type' => $dataType[h($cell)]));
+                    }
+                }
+                else
+                {
+                    foreach ($rowData as $key => $cell)
+                    {
+                        if (array_values($dataType)[$key] == 'number')
+                        {
+                            $rowData[$key] = floatval($rowData[$key]);
+                        }
+                        else
+                        {
+                            $rowData[$key] = h($rowData[$key]);
+                        }
+                    }
+                    
+                    array_push($content, array_combine(array_keys($dataType), $rowData));
+                }
+                
+                $rowNumber++;
+            }
+            
+            fclose($handle);
+            unlink($filePath);
+            
+//             $data = [
+//                 'user_id' => $userID,
+//                 'name' => h($fileName),
+//                 'file_fields' => $fields,
+//                 'file_content' => array('content' => json_encode($content))
+//             ];
+            
+            $file = $this->newEntity();
+            $file->user_id = $userID;
+            $file->name = h($fileName);
+//             $file->filefields = $this->FileFields->newEntity($fields);
+//             $file->dirty('filefields', true);
+            
+            $fileContent = $this->FileContents->newEntity(array('content' => json_encode($content)));
+            $fileContent->dirty('file_id', true);
+            $file->file_content = $fileContent;
+            
+            if ($this->save($file))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
     }
     

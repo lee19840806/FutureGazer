@@ -46,6 +46,38 @@ class FilesController extends AppController
         }
     }
     
+    public function submitFile()
+    {
+        if ($this->request->is('post'))
+        {
+            $existed = $this->Files->find()
+            ->where(['user_id' => $this->Auth->user('id'), 'name' => h($this->request->data['userfile']['name'])])
+            ->first();
+    
+            if ($existed == null)
+            {
+                $saveResult = $this->Files->saveFileToMySQL($this->request->data['userfile']['tmp_name'], h($this->request->data['userfile']['name']),
+                    $this->request->data['dataType'], json_decode($this->request->data['csvMeta'], true), $this->Auth->user('id'));
+                
+                if ($saveResult)
+                {
+                    $this->Flash->set('The file has been uploaded successfully.', ['element' => 'success']);
+                    $this->redirect(['action' => 'list_files']);
+                }
+                else
+                {
+                    $this->Flash->set('An error occured during file upload. Please upload the file again.', ['element' => 'alert']);
+                    $this->redirect(['action' => 'upload']);
+                }
+            }
+            else
+            {
+                $this->Flash->set('A file with the same name existed. Rename your file and upload agian.', ['element' => 'alert']);
+                $this->redirect(['action' => 'upload']);
+            }
+        }
+    }
+    
     public function view($id = NULL)
     {
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
