@@ -82,8 +82,10 @@ class FilesController extends AppController
     {
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
         {
-            $file = $this->Files->viewFileContent($id, $this->Auth->user('id'));
-            $this->set('file', json_encode($file));
+            //$file = $this->Files->viewFileContent($id, $this->Auth->user('id'));
+            $file = $this->Files->find()->where(['Files.id' => $id])->contain(['FileFields', 'FileContents'])->first()->toArray();
+            $this->set('fields', json_encode($file['file_fields']));
+            $this->set('file', $file);
         }
         else
         {
@@ -98,7 +100,9 @@ class FilesController extends AppController
     
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
         {
-            if ($this->Files->deleteFile($id, $this->Auth->user('id')))
+            $file = $this->Files->get($id);
+            
+            if ($this->Files->delete($file))
             {
                 $this->Flash->success('The file has been deleted.');
             }

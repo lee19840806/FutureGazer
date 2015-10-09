@@ -51,9 +51,9 @@ class FileFieldsTable extends Table
             ->add('id', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->add('index', 'valid', ['rule' => 'numeric'])
-            ->requirePresence('index', 'create')
-            ->notEmpty('index');
+            ->add('indx', 'valid', ['rule' => 'numeric'])
+            ->requirePresence('indx', 'create')
+            ->notEmpty('indx');
 
         $validator
             ->requirePresence('name', 'create')

@@ -15,7 +15,7 @@
                         Loading data, please wait...
                     </div>
                     <div class="panel panel-primary">
-                        <div class="panel-heading"><?= json_decode($file)->FileName ?></div>
+                        <div class="panel-heading"><?= $file['name'] ?></div>
                         <div class="panel-body">
                             <div id="data" style="height: 700px; width: auto; overflow: hidden;"></div>
                         </div>
@@ -30,14 +30,15 @@
 <br>
 <br>
 <script>
-var file = $.parseJSON('<?= $file ?>');
+var content = $.parseJSON('<?= $file['file_content']['content'] ?>');
+var fields = $.parseJSON('<?= $fields ?>')
 
 var container = document.getElementById('data');
 var handsonTable = new Handsontable(container, {
-    data: file.Content,
+    data: content,
     minSpareRows: 0,
     rowHeaders: true,
-    colHeaders: _.map(file.Fields, function(value, key) { return _.keys(value)[0]; }),
+    colHeaders: _.pluck(fields, 'name'),
     contextMenu: false
     });
 

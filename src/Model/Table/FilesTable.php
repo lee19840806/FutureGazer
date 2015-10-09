@@ -43,7 +43,7 @@ class FilesTable extends Table
         
         $this->hasMany('FileFields', [
             'foreignKey' => 'file_id',
-            'sort' => ['FileFields.index' => 'DESC'],
+            'sort' => ['FileFields.indx' => 'ASC'],
             'dependent' => true
         ]);
         
@@ -165,7 +165,7 @@ class FilesTable extends Table
                 {
                     foreach ($rowData as $key => $cell)
                     {
-                        array_push($fields, array('index' => $key + 1, 'name' => h($cell), 'type' => $dataType[h($cell)]));
+                        array_push($fields, $this->FileFields->newEntity(array('indx' => $key + 1, 'name' => h($cell), 'type' => $dataType[h($cell)])));
                     }
                 }
                 else
@@ -191,22 +191,11 @@ class FilesTable extends Table
             fclose($handle);
             unlink($filePath);
             
-//             $data = [
-//                 'user_id' => $userID,
-//                 'name' => h($fileName),
-//                 'file_fields' => $fields,
-//                 'file_content' => array('content' => json_encode($content))
-//             ];
-            
             $file = $this->newEntity();
             $file->user_id = $userID;
             $file->name = h($fileName);
-//             $file->filefields = $this->FileFields->newEntity($fields);
-//             $file->dirty('filefields', true);
-            
-            $fileContent = $this->FileContents->newEntity(array('content' => json_encode($content)));
-            $fileContent->dirty('file_id', true);
-            $file->file_content = $fileContent;
+            $file->file_fields = $fields;
+            $file->file_content = $this->FileContents->newEntity(array('content' => json_encode($content)));
             
             if ($this->save($file))
             {
@@ -234,6 +223,13 @@ class FilesTable extends Table
         $file = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Content.RowNum' => 0));
         $file = array_merge($file, array('fileID' => $fileID));
         
+        return $file;
+    }
+    
+    public function view($fileID = NULL, $userID = NULL)
+    {
+        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name);
+    
         return $file;
     }
     
@@ -484,30 +480,5 @@ class FilesTable extends Table
     public function isOwnedBy($fileID = NULL, $userID = NULL)
     {
         return $this->exists(['id' => $fileID, 'user_id' => $userID]);
-    }
-    
-    public function deleteFile($fileID = NULL, $userID = NULL)
-    {
-        $mongoConnection = new \MongoClient();
-        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
-    
-        $file = $this->get($fileID);
-        $fileName = $file->name;
-    
-        if ($this->delete($file))
-        {
-            if ($collectionFiles->remove(array('UserID' => $userID, 'FileName' => $fileName), array("justOne" => true)))
-            {
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
-        {
-            return false;
-        }
     }
 }
