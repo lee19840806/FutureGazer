@@ -22,30 +22,6 @@ class FilesController extends AppController
         
     }
     
-    public function submit()
-    {
-        if ($this->request->is('post'))
-        {
-            $existed = $this->Files->find()
-                ->where(['user_id' => $this->Auth->user('id'), 'name' => h($this->request->data['userfile']['name'])])
-                ->first();
-    
-            if ($existed == null)
-            {
-                $this->Files->saveFile($this->request->data['userfile']['tmp_name'], h($this->request->data['userfile']['name']), 
-                    $this->request->data['dataType'], json_decode($this->request->data['csvMeta'], true), $this->Auth->user('id'));
-                
-                $this->Flash->set('The file has been uploaded successfully.', ['element' => 'success']);
-                $this->redirect(['action' => 'list_files']);
-            }
-            else
-            {
-                $this->Flash->set('A file with the same name existed. Rename your file and upload agian.', ['element' => 'alert']);
-                $this->redirect(['action' => 'upload']);
-            }
-        }
-    }
-    
     public function submitFile()
     {
         if ($this->request->is('post'))
@@ -82,7 +58,6 @@ class FilesController extends AppController
     {
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
         {
-            //$file = $this->Files->viewFileContent($id, $this->Auth->user('id'));
             $file = $this->Files->find()->where(['Files.id' => $id])->contain(['FileFields', 'FileContents'])->first()->toArray();
             $this->set('fields', json_encode($file['file_fields']));
             $this->set('file', $file);

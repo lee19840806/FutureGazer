@@ -22,7 +22,7 @@
                             <?php foreach ($files as $file): ?>
                                 <tr>
                                     <td>
-                                        <?= $this->Html->link('Build curves', ['controller' => 'MaturationCurves', 'action' => 'build', $file->id]); ?>
+                                        <?= $this->Html->link('Build curves', ['controller' => 'MaturationCurves', 'action' => 'build_maturation_curves', $file->id]); ?>
                                     </td>
                                     <td><?= h($file->name) ?></td>
                                     <td><?= h($file->created) ?></td>

@@ -90,65 +90,6 @@ class FilesTable extends Table
         return $rules;
     }
     
-    /*
-    public function saveFile($filePath = NULL, $fileName = NULL, $dataType = NULL, $csvMeta = NULL, $userID = NULL)
-    {
-        $mongoConnection = new \MongoClient();
-        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
-    
-        $document = array('UserID' => $userID, 'FileName' => $fileName, 'Fields' => array(), 'Content' => array());
-        $handle = fopen($filePath, 'r');
-    
-        if ($handle !== FALSE)
-        {
-            $rowNumber = 0;
-            $header = [];
-    
-            while (($rowData = fgetcsv($handle, 0, $csvMeta['delimiter'])) !== FALSE)
-            {
-                if ($rowNumber == 0)
-                {
-                    $header = $rowData;
-                    
-                    foreach ($rowData as $key => $cell)
-                    {
-                        array_push($document['Fields'], array(h($cell) => array_values($dataType)[$key]));
-                    }
-                }
-                else
-                {
-                    foreach ($rowData as $key => $cell)
-                    {
-                        if (array_values($dataType)[$key] == 'number')
-                        {
-                            $rowData[$key] = floatval($rowData[$key]);
-                        }
-                        else
-                        {
-                            $rowData[$key] = h($rowData[$key]);
-                        }
-                    }
-                    
-                    $row = array_merge(array('RowNum' => $rowNumber), array_combine($header, $rowData));
-                    array_push($document['Content'], $row);
-                }
-                
-                $rowNumber++;
-            }
-            
-            fclose($handle);
-            unlink($filePath);
-    
-            $collectionFiles->insert($document);
-    
-            $file = $this->newEntity();
-            $file->user_id = $userID;
-            $file->name = h($fileName);
-            $this->save($file);
-        }
-    }
-    */
-    
     public function saveFileToMySQL($filePath = NULL, $fileName = NULL, $dataType = NULL, $csvMeta = NULL, $userID = NULL)
     {
         $handle = fopen($filePath, 'r');
@@ -211,26 +152,6 @@ class FilesTable extends Table
     public function saveMaturation($fields = NULL, $curves = NULL, $dataType = NULL, $userID = NULL)
     {
         
-    }
-    
-    public function viewFileContent($fileID = NULL, $userID = NULL)
-    {
-        $mongoConnection = new \MongoClient();
-        $collectionFiles = $mongoConnection->selectDB($this->mongoDatabase)->selectCollection($this->mongoCollection);
-    
-        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name);
-    
-        $file = $collectionFiles->findOne(array('UserID' => $userID, 'FileName' => $fileName), array('Content.RowNum' => 0));
-        $file = array_merge($file, array('fileID' => $fileID));
-        
-        return $file;
-    }
-    
-    public function view($fileID = NULL, $userID = NULL)
-    {
-        $fileName = h($this->find()->select(['id', 'name'])->where(['id' => $fileID, 'user_id' => $userID])->first()->name);
-    
-        return $file;
     }
     
     public function getFields($fileID = NULL, $userID = NULL)
