@@ -22,7 +22,7 @@
     <script src="/js/papaparse.js"></script>
     <script src="/js/handsontable.full.js"></script>
     <script src="/js/Chart.js"></script>
-    <script src="/js/underscore.js"></script>
+    <script src="/js/lodash.min.js"></script>
 </head>
 
 <body>
