@@ -44,9 +44,25 @@
                         <div class="row">
                             <div class="col-lg-12">
                                 <p><strong>Click "Build maturation curves" if you are ready</strong></p>
-                                <button id="buildCurves" type="button" class="btn btn-sm btn-success">
+                                <button id="buildCurves" type="button" class="btn btn-sm btn-primary">
                                     <strong>Build maturation curves</strong>
                                 </button>
+                            </div>
+                        </div>
+                        <hr>
+                        <div id="divMaturationCurves" class="row" style="display: none;">
+                            <div class="col-lg-12">
+                                <button id="saveCurves" type="button" class="btn btn-sm btn-success">
+                                    <strong>Save maturation curves for later use</strong>
+                                </button>
+                                <br>
+                                <br>
+                                <div class="panel panel-success">
+                                <div class="panel-heading">Maturation curves</div>
+                                    <div class="panel-body">
+                                        <div id="dataMaturationCurves" style="height: 400px; width: auto; overflow: hidden;"></div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <hr>
@@ -78,6 +94,7 @@
 <script>
 var content = $.parseJSON('<?= $file['file_content']['content'] ?>');
 var fields = $.parseJSON('<?= $fieldsJSON ?>');
+var fileID = <?= $file['id'] ?>;
 
 var container = document.getElementById('data');
 var handsonTable = new Handsontable(container, {
@@ -90,24 +107,59 @@ var handsonTable = new Handsontable(container, {
 
 $("#loading").remove();
 
-var list = [ { user_id: 301, alert_id: 199, deal_id: 32243 },
-             { user_id: 301, alert_id: 200, deal_id: 32243 },
-             { user_id: 301, alert_id: 200, deal_id: 107293 },
-             { user_id: 301, alert_id: 200, deal_id: 277470 } ];
+function aggregate(collection, originalFields, groupVariables, aggregationFields, calculatedFields)
+{
+    var fields = [];
+    var result = {};
+    
+    var groupByResult = _.groupBy(collection, function(obj) {
+        return _.map(groupVariables, function(variable) { return obj[variable]; });
+        });
 
-           var groups = _.groupBy(list, function(value){
-               return value.user_id + '#' + value.alert_id;
-           });
+    _.forEach(groupVariables, function(obj) {
+        fields.push({'indx': fields.length + 1, 'name': obj, 'type': _.find(originalFields, {'name': obj})['type']});
+        });
 
-           var data = _.map(groups, function(group){
-               return {
-                   user_id: group[0].user_id,
-                   alert_id: group[0].alert_id,
-                   deals: _.pluck(group, 'deal_id')
-               }
-           });
+    var aggregateResult = _.map(groupByResult, function(obj) {
+        var row = {};
+        
+        _.forEach(groupVariables, function(variable) {
+            row[variable] = obj[0][variable];
+            });
+
+        _.forEach(aggregationFields.sum, function(n) {
+            row[n] = _.reduce(obj, function(total, single) {
+                var converted = (single[n] == "") ? 0 : single[n];
+                return total + converted;
+                }, 0);
+            });
+        
+        return row;
+        });
+
+    _.forEach(aggregationFields.sum, function(n) {
+        fields.push({'indx': fields.length + 1, 'name': n, 'type': _.find(originalFields, {'name': n})['type']});
+        });
+
+    _.forEach(calculatedFields.divide, function(obj) {
+        _.forEach(aggregateResult, function(n) {
+            n[obj['fieldName']] = n[obj['numerator']] / n[obj['denominator']];
+            });
+
+        fields.push({'indx': fields.length + 1, 'name': obj['fieldName'], 'type': 'number'});
+        });
+
+    var sortedResult = _.sortByAll(aggregateResult, groupVariables);
+
+    result.fields = fields;
+    result.content = sortedResult;
+
+    return result;
+}
 
 $("#buildCurves").click(function() {
+    var fileID = <?= $file['id'] ?>;
+    
     var segmentVariableIndexes = $.map($("[name='segmentVariables[]']"), function(element, index) { return (element.checked == true) ? index : undefined; });
     
     var originationIndex = parseInt($("[name='origination']").val());
@@ -121,33 +173,31 @@ $("#buildCurves").click(function() {
     var groupVariables = _.map(segmentVariableIndexes, function(value) { return fields[value]['name']; });
     groupVariables.push(fields[mobIndex]['name']);
 
-    var groupByResult = _.groupBy(content, function(obj) {
-        return _.map(groupVariables, function(variable) { return obj[variable]; });
+    var aggrFields = {count: [], sum: [], average: []};
+    aggrFields.sum.push(chargeOffVariable);
+    aggrFields.sum.push(originationVariable);
+
+    var calcFields = {add: [], subtract: [], multiply: [], divide: []};
+    calcFields.divide.push({'fieldName': 'charge_off_rate', 'numerator': chargeOffVariable, 'denominator': originationVariable});
+
+    var mCurves = aggregate(content, fields, groupVariables, aggrFields, calcFields);
+
+    _.forEach(mCurves.fields, function(obj) {
+        obj['file_id'] = fileID;
         });
 
-    var aggregateResult = _.map(groupByResult, function(obj) {
-        var p = {};
-        
-        _.forEach(groupVariables, function(variable) {
-            p[variable] = obj[0][variable];
-            });
-        
-        p[originationVariable] = _.reduce(obj, function(total, n) {
-            var converted = (n[originationVariable] == "") ? 0 : n[originationVariable];
-            return total + converted;
-            }, 0);
-
-        p[chargeOffVariable] = _.reduce(obj, function(total, n) {
-            var converted = (n[chargeOffVariable] == "") ? 0 : n[chargeOffVariable];
-            return total + converted;
-            }, 0);
-
-        p['charge_off_rate'] = p[chargeOffVariable] / p[originationVariable];
-
-        return p;
+    $("#divMaturationCurves").slideUp();
+    
+    var containerMaturationCurves = document.getElementById('dataMaturationCurves');
+    var handsonTableMaturationCurves = new Handsontable(containerMaturationCurves, {
+        data: mCurves.content,
+        minSpareRows: 0,
+        rowHeaders: true,
+        colHeaders: _.pluck(mCurves.fields, 'name'),
+        contextMenu: false
         });
 
-    var sortedResult = _.sortByAll(aggregateResult, groupVariables);
+    $("#divMaturationCurves").slideDown();
     
     var a = 1;
 });
