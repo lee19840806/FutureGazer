@@ -69,6 +69,25 @@ class FilesController extends AppController
         }
     }
     
+    public function nameAvailable()
+    {
+        $this->request->allowMethod(['get']);
+        $this->layout = 'ajax';
+        
+        $fileName = $this->Files->find()->where(['Files.user_id' => $this->Auth->user('id'), 'Files.name' => $this->request->query['fileName']])->first();
+        
+        if ($fileName == null)
+        {
+            $this->set('result', 1);
+        }
+        else
+        {
+            $this->set('result', 0);
+        }
+        
+        $a = 1;
+    }
+    
     public function delete($id = NULL)
     {
         $this->request->allowMethod(['post', 'delete']);

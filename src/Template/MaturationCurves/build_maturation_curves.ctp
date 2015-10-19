@@ -11,7 +11,7 @@
                     <?= $this->Flash->render() ?>
                     <form id="buildMaturationForm" action="/MaturationCurves/calculate" method="POST">
                         <input type="hidden" name="fileID" value="<?= $file['id'] ?>">
-                        <div class="row">
+                        <div class="row" id="divConfig" style="display: none;">
                             <div class="col-lg-12">
                                 <div class="row">
                                     <div class="col-lg-6">
@@ -41,7 +41,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
+                        <div class="row" id="divButtonBuild" style="display: none;">
                             <div class="col-lg-12">
                                 <p><strong>Click "Build maturation curves" if you are ready</strong></p>
                                 <button id="buildCurves" type="button" class="btn btn-sm btn-primary">
@@ -52,11 +52,14 @@
                         <hr>
                         <div id="divMaturationCurves" class="row" style="display: none;">
                             <div class="col-lg-12">
-                                <button id="saveCurves" type="button" class="btn btn-sm btn-success">
-                                    <strong>Save maturation curves for later use</strong>
-                                </button>
-                                <br>
-                                <br>
+                                <div class="form-group">
+                                    <button id="saveCurves" type="button" class="btn btn-sm btn-success">
+                                        <strong>Save maturation curves for later use</strong>
+                                    </button>
+                                </div>
+                                <div class="form-group">
+                                    <input type="text" id="curveName" class="form-control" placeholder="Name for maturation data" required>
+                                </div>
                                 <div class="panel panel-success">
                                 <div class="panel-heading">Maturation curves</div>
                                     <div class="panel-body">
@@ -95,9 +98,9 @@
 var content = $.parseJSON('<?= $file['file_content']['content'] ?>');
 var fields = $.parseJSON('<?= $fieldsJSON ?>');
 var fileID = <?= $file['id'] ?>;
+var mCurves = {};
 
-var container = document.getElementById('data');
-var handsonTable = new Handsontable(container, {
+var handsonTable = new Handsontable(document.getElementById('data'), {
     data: content,
     minSpareRows: 0,
     rowHeaders: true,
@@ -106,6 +109,16 @@ var handsonTable = new Handsontable(container, {
     });
 
 $("#loading").remove();
+$("#divConfig").slideDown();
+$("#divButtonBuild").slideDown();
+
+var handsonTableMaturationCurves = new Handsontable(document.getElementById('dataMaturationCurves'), {
+    data: [],
+    minSpareRows: 0,
+    rowHeaders: true,
+    colHeaders: [],
+    contextMenu: false
+    });
 
 function aggregate(collection, originalFields, groupVariables, aggregationFields, calculatedFields)
 {
@@ -180,26 +193,42 @@ $("#buildCurves").click(function() {
     var calcFields = {add: [], subtract: [], multiply: [], divide: []};
     calcFields.divide.push({'fieldName': 'charge_off_rate', 'numerator': chargeOffVariable, 'denominator': originationVariable});
 
-    var mCurves = aggregate(content, fields, groupVariables, aggrFields, calcFields);
+    mCurves = aggregate(content, fields, groupVariables, aggrFields, calcFields);
 
     _.forEach(mCurves.fields, function(obj) {
         obj['file_id'] = fileID;
         });
 
     $("#divMaturationCurves").slideUp();
-    
-    var containerMaturationCurves = document.getElementById('dataMaturationCurves');
-    var handsonTableMaturationCurves = new Handsontable(containerMaturationCurves, {
-        data: mCurves.content,
-        minSpareRows: 0,
-        rowHeaders: true,
-        colHeaders: _.pluck(mCurves.fields, 'name'),
-        contextMenu: false
-        });
-
+    handsonTableMaturationCurves.updateSettings({data: mCurves.content, colHeaders: _.pluck(mCurves.fields, 'name')});
     $("#divMaturationCurves").slideDown();
+});
+
+$("#saveCurves").click(function() {
+    var fileName = $("#curveName").val();
     
-    var a = 1;
+    if (fileName == "")
+    {
+        alert("Please enter a name for this maturation curve data");
+        return;
+    }
+
+    var nameExisted;
+    
+    $.ajax({
+        method: "GET",
+        url: "/Files/nameAvailable",
+        data: {'fileName': fileName}
+        })
+        .done(function(data) {
+            nameExisted = data;
+            });
+
+    if (nameExisted = 1)
+    {
+        alert("File name '" + fileName + "' existed, please use another name.");
+        return;
+    }
 });
 </script>
 
