@@ -212,23 +212,41 @@ $("#saveCurves").click(function() {
         alert("Please enter a name for this maturation curve data");
         return;
     }
-
-    var nameExisted;
     
     $.ajax({
         method: "GET",
-        url: "/Files/nameAvailable",
+        url: "/Files/name_available",
         data: {'fileName': fileName}
-        })
+    })
         .done(function(data) {
-            nameExisted = data;
-            });
+            if (data == "0")
+            {
+                alert("File name '" + fileName + "' existed, please use another name.");
+            }
+            else
+            {
+                var m = {"fileName": fileName, "fileFields": mCurves.fields, "fileContent": mCurves.content};
 
-    if (nameExisted = 1)
-    {
-        alert("File name '" + fileName + "' existed, please use another name.");
-        return;
-    }
+                $.ajax({
+                    method: "POST",
+                    url: "/Files/client_save_data",
+                    data: {"fileName": fileName, "fileFields": JSON.stringify(mCurves.fields), "fileContent": JSON.stringify(mCurves.content)}
+                })
+                    .done(function(result) {
+                        if (result == "0")
+                        {
+                            alert("An error has occured when trying to save maturation curve data. Please try again.");
+                        }
+                        else
+                        {
+                            alert("Maturation curve data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                        }
+                        })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                        var a = 1;
+                        });
+            }
+            });
 });
 </script>
 
