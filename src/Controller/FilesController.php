@@ -88,7 +88,7 @@ class FilesController extends AppController
     
     public function client_save_data()
     {
-        $this->request->allowMethod(['post', 'get']);
+        $this->request->allowMethod(['post']);
         $this->layout = 'ajax';
         
         $fieldsEntities = [];
