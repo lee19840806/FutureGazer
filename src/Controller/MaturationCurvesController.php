@@ -20,24 +20,6 @@ class MaturationCurvesController extends AppController
         $this->set('_serialize', ['files']);
     }
     
-    /*
-    public function build($id = NULL)
-    {
-        $this->loadModel('Files');
-        
-        if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
-        {
-            $fields = $this->Files->getFields($id, $this->Auth->user('id'));
-            $this->set('fields', $fields);
-        }
-        else
-        {
-            $this->Flash->error('You are not the owner of this file.');
-            $this->redirect(['action' => 'list_files']);
-        }
-    }
-    */
-    
     public function build_maturation_curves($id = NULL)
     {
         $this->loadModel('Files');
@@ -62,6 +44,32 @@ class MaturationCurvesController extends AppController
             $this->Flash->error('You are not the owner of this file.');
             $this->redirect(['action' => 'list_files']);
         }
+    }
+    
+    public function build($id = NULL)
+    {
+    	$this->loadModel('Files');
+    
+    	if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
+    	{
+    		$file = $this->Files->find()->where(['Files.id' => $id])->contain(['FileFields', 'FileContents'])->first()->toArray();
+    
+    		$fieldsCollection = new Collection($file['file_fields']);
+    		$fields = $fieldsCollection->extract('name')->toArray();
+    		$disabledItems = $fieldsCollection->map(function ($value, $key) {
+    			return ($value['type'] == 'string') ? $key : null;
+    		})->toArray();
+    
+    		$this->set('fields', $fields);
+    		$this->set('fieldsJSON', json_encode($file['file_fields']));
+    		$this->set('disabledItems', $disabledItems);
+    		$this->set('file', $file);
+    	}
+    	else
+    	{
+    		$this->Flash->error('You are not the owner of this file.');
+    		$this->redirect(['action' => 'list_files']);
+    	}
     }
     
     public function calculate()
@@ -92,14 +100,6 @@ class MaturationCurvesController extends AppController
                 $this->Flash->error('You are not the owner of this file.');
                 $this->redirect(['action' => 'list_files']);
             }
-        }
-    }
-    
-    public function saveMaturation()
-    {
-        if ($this->request->is('post'))
-        {
-            $a = 1;
         }
     }
 }

@@ -23,6 +23,7 @@
     <script src="/js/handsontable.full.js"></script>
     <script src="/js/Chart.js"></script>
     <script src="/js/lodash.min.js"></script>
+    <script src="/js/Sortable.js"></script>
 </head>
 
 <body>
