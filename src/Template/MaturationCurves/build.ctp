@@ -6,113 +6,69 @@
         <div class="col-lg-10">
             <div class="row">
                 <div class="col-lg-12">
-                    <h4><strong>Build maturation curves</strong></h4>
+                    <h4><strong>Summarize data</strong></h4>
                     <hr>
                     <div class="row" id="divConfig" style="display: none;">
-                    	<div class="col-lg-4">
+                    	<div class="col-lg-3">
 							<div class="panel panel-primary">
-                                <div class="panel-heading">Available fields</div>
+                                <div class="panel-heading">Fields (drag from here)</div>
                                 <div class="panel-body">
-                                    <?= $this->Html->nestedList($fields, ['id' => 'fields']); ?>
+                                    <?= $this->Html->nestedList($fields, ['id' => 'fields', 'style' => 'min-height: 20px;']); ?>
                                 </div>
                             </div>
-                            
                         </div>
-                        <div class="col-lg-4">
+                        <div class="col-lg-3">
                         	<div class="panel panel-primary">
-                                <div class="panel-heading">Group by (drag fields and drop here)</div>
+                                <div class="panel-heading">Group by (drop here)</div>
                                 <div class="panel-body">
                                     <ul id="groupBy" style="min-height: 20px;"></ul>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    <?= $this->Flash->render() ?>
-                    <form id="buildMaturationForm" action="/MaturationCurves/calculate" method="POST">
-                        <input type="hidden" name="fileID" value="<?= $file['id'] ?>">
-                        <div class="row" id="divConfig" style="display: none;">
-                            <div class="col-lg-12">
-                                <div class="row">
-                                    <div class="col-lg-6">
-                                        <div class="panel panel-primary">
-                                            <div class="panel-heading">Segmentation variables</div>
-                                            <div class="panel-body">
-                                                <p>Define segments by selecting one or more variables</p>
-                                                <?= $this->Form->select('segmentVariables', $fields, ['multiple' => 'checkbox']) ?>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-6">
-                                        <div class="panel panel-primary">
-                                            <div class="panel-heading">Maturation curve variables</div>
-                                            <div class="panel-body">
-                                                <p>Select the variable which represents <strong>origination amount</strong></p>
-                                                <?= $this->Form->select('origination', $fields, ['disabled' => $disabledItems]) ?>
-                                                <hr>
-                                                <p>Select the variable which represents <strong>charge off amount</strong></p>
-                                                <?= $this->Form->select('chargeOff', $fields, ['disabled' => $disabledItems]) ?>
-                                                <hr>
-                                                <p>Select the variable which represents <strong>months on book</strong></p>
-                                                <?= $this->Form->select('MoB', $fields, ['disabled' => $disabledItems]) ?>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <div class="col-lg-3">
+                        	<div class="panel panel-primary">
+                                <div class="panel-heading">Sum values (drop here)</div>
+                                <div class="panel-body">
+                                    <ul id="summary" style="min-height: 20px;"></ul>
                                 </div>
                             </div>
                         </div>
-                        <div class="row" id="divButtonBuild" style="display: none;">
-                            <div class="col-lg-12">
-                                <p><strong>Click "Build maturation curves" if you are ready</strong></p>
-                                <button id="buildCurves" type="button" class="btn btn-sm btn-primary">
-                                    <strong>Build maturation curves</strong>
+                    </div>
+                    <hr>
+                    <div class="row" id="divMaturationCurves" style="display: yes;">
+                        <div class="col-lg-12">
+                            <div class="form-group">
+                                <button id="saveCurves" type="button" class="btn btn-sm btn-info">
+                                    <strong>Save summary data</strong>
                                 </button>
                             </div>
-                        </div>
-                        <hr>
-                        <div id="divMaturationCurves" class="row" style="display: none;">
-                            <div class="col-lg-12">
-                                <div class="form-group">
-                                    <button id="saveCurves" type="button" class="btn btn-sm btn-success">
-                                        <strong>Save maturation curves for later use</strong>
-                                    </button>
-                                </div>
-                                <div class="form-group">
-                                    <input type="text" id="curveName" class="form-control" placeholder="Name for maturation data" required>
-                                </div>
-                                <div class="panel panel-success">
-                                <div class="panel-heading">Maturation curves</div>
-                                    <div class="panel-body">
-                                        <div id="dataMaturationCurves" style="height: 400px; width: auto; overflow: hidden;"></div>
-                                    </div>
+                            <div class="form-group">
+                                <input type="text" id="curveName" class="form-control" placeholder="Name for summary data" required>
+                            </div>
+                            <div class="panel panel-info">
+                            	<div class="panel-heading">Summary result</div>
+                                <div class="panel-body">
+                                    <div id="dataMaturationCurves" style="height: 400px; width: auto; overflow: hidden;"></div>
                                 </div>
                             </div>
                         </div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div id="loading" class="alert alert-success" role="alert">
-                                    <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
-                                    <span class="sr-only">Loading:</span>
-                                    Loading data, please wait...
-                                </div>
-                                <div class="panel panel-primary">
-                                    <div class="panel-heading"><?= $file['name'] ?></div>
-                                    <div class="panel-body">
-                                        <div id="data" style="height: 400px; width: auto; overflow: hidden;"></div>
-                                    </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-lg-12">
+                            <div id="loading" class="alert alert-success" role="alert">
+                                <span class="glyphicon glyphicon-refresh" aria-hidden="true"></span>
+                                <span class="sr-only">Loading:</span>
+                                Loading data, please wait...
+                            </div>
+                            <div class="panel panel-primary">
+                                <div class="panel-heading">Raw data - <?= $file['name'] ?></div>
+                                <div class="panel-body">
+                                    <div id="data" style="height: 400px; width: auto; overflow: hidden;"></div>
                                 </div>
                             </div>
                         </div>
-                    </form>
-                    <br>
-                    <br>
+                    </div>
                     <br>
                     <br>
                 </div>
@@ -121,21 +77,55 @@
     </div>
 </div>
 <script>
-var sortableFields = Sortable.create(document.getElementById('fields'), {group: 'pivot', ghostClass: 'bg-primary'});
-var sortableGroupBy = Sortable.create(document.getElementById('groupBy'), {group: 'pivot', ghostClass: 'bg-primary'});
-
-
-
-
-
-
-
-
-
 var content = $.parseJSON('<?= $file['file_content']['content'] ?>');
 var fields = $.parseJSON('<?= $fieldsJSON ?>');
 var fileID = <?= $file['id'] ?>;
 var mCurves = {};
+
+var sortableFields = Sortable.create(document.getElementById('fields'), {
+	group: 'fields',
+	sort: false,
+	ghostClass: 'bg-primary'});
+
+var sortableGroupBy = Sortable.create(document.getElementById('groupBy'), {
+	group: 'fields',
+	ghostClass: 'bg-primary',
+	onSort: function (event) {
+		updatePivotTable();
+		}});
+
+var sortableSummary = Sortable.create(document.getElementById('summary'), {
+	group: 'fields',
+	ghostClass: 'bg-primary',
+	onSort: function (event) {
+		updatePivotTable();
+		}});
+
+function updatePivotTable()
+{
+	var groupBy = [];
+	var aggrObj = {count: [], sum: [], average: []};
+	var calcFields = {add: [], subtract: [], multiply: [], divide: []};
+	
+	$.each($('#groupBy > li'), function (index, value) {
+		groupBy.push($(value).html());
+	});
+
+	$.each($('#summary > li'), function (index, value) {
+		aggrObj.sum.push($(value).html());
+	});
+	
+	var mCurves = aggregate(content, fields, groupBy, aggrObj, calcFields);
+
+	_.forEach(mCurves.fields, function(obj) {
+        obj['file_id'] = fileID;
+        });
+
+	handsonTableMaturationCurves.updateSettings({data: mCurves.content, colHeaders: _.pluck(mCurves.fields, 'name')});
+}
+
+
+
 
 var handsonTable = new Handsontable(document.getElementById('data'), {
     data: content,
