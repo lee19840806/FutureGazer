@@ -13,7 +13,9 @@
 							<div class="panel panel-primary">
                                 <div class="panel-heading">Fields (drag from here)</div>
                                 <div class="panel-body">
-                                    <?= $this->Html->nestedList($fields, ['id' => 'fields', 'style' => 'min-height: 10px; padding-bottom: 10px;']); ?>
+	                                <div class="row">
+	                                    <?= $this->Html->nestedList($fields, ['id' => 'fields', 'style' => 'min-height: 10px; padding-bottom: 10px;']); ?>
+	                                </div>
                                 </div>
                             </div>
                         </div>
@@ -21,7 +23,9 @@
                         	<div class="panel panel-primary">
                                 <div class="panel-heading">Group by (drop here)</div>
                                 <div class="panel-body">
-                                    <ul id="groupBy" style="min-height: 10px; padding-bottom: 10px;"></ul>
+                                	<div class="row">
+                                    	<ul id="groupBy" style="min-height: 10px; padding-bottom: 10px; list-style: none;"></ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -29,7 +33,9 @@
                         	<div class="panel panel-primary">
                                 <div class="panel-heading">Sum values (drop here)</div>
                                 <div class="panel-body">
-                                    <ul id="summary" style="min-height: 10px; padding-bottom: 10px;"></ul>
+                                	<div class="row">
+                                    	<ul id="summary" style="min-height: 10px; padding-bottom: 10px;"></ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -41,9 +47,9 @@
                                     	<strong> Add + </strong>
                                 	</button></div>
                                 <div class="panel-body">
-                                    <ul id="calculated" style="min-height: 10px; padding-bottom: 10px;">
-                                    	<li>charge_off_rate<i class="item-remove">✖</i><input type="hidden" value="alsdjflsjdljs;df" /></li>
-                                    </ul>
+                                	<div class="row">
+	                                    <ul id="calculated" style="min-height: 10px; padding-bottom: 10px;"></ul>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -114,10 +120,10 @@
 					</div>
 					<div class="form-group">
 						<select class="form-control input-sm" id="operator">
-							<option>+</option>
-							<option>-</option>
-							<option>&times;</option>
-							<option>&divide;</option>
+							<option value="add">+</option>
+							<option value="subtract">-</option>
+							<option value="multiply">&times;</option>
+							<option value="divide">&divide;</option>
 						</select>
 					</div>
 					<div class="form-group">
@@ -149,12 +155,11 @@
 	-webkit-transition: opacity .2s;
 	transition: opacity .2s;
 	opacity: 0;
-	display: block;
 	cursor: pointer;
 	color: #c00;
 	top: 0px;
-	right: 10px;
- 	position: absolute;
+	left: 10px;
+ 	position: relative;
 	font-style: normal;
 }
 
@@ -188,6 +193,17 @@ var sortableSummary = Sortable.create(document.getElementById('summary'), {
 		updatePivotTable();
 		}});
 
+var sortableCalculated = Sortable.create(document.getElementById('calculated'), {
+	group: 'calc',
+	ghostClass: 'bg-primary',
+	filter: '.item-remove',
+	onFilter: function (event) {
+		event.item.parentNode.removeChild(event.item);
+		},
+	onSort: function (event) {
+		updatePivotTable();
+		}});
+
 function updatePivotTable()
 {
 	var groupBy = [];
@@ -200,6 +216,26 @@ function updatePivotTable()
 
 	$.each($('#summary > li'), function (index, value) {
 		aggrObj.sum.push($(value).html());
+	});
+	
+	$.each($('#calculated > li'), function (index, value) {
+		var operation = $.parseJSON($(value).children('input').val());
+
+		switch (operation.operator)
+		{
+			case 'add':
+				calcFields.add.push({'fieldName': operation.fieldName, 'operand1': operation.operand1, 'operand2': operation.operand2});
+				break;
+			case 'subtract':
+				calcFields.subtract.push({'fieldName': operation.fieldName, 'operand1': operation.operand1, 'operand2': operation.operand2});
+				break;
+			case 'multiply':
+				calcFields.multiply.push({'fieldName': operation.fieldName, 'operand1': operation.operand1, 'operand2': operation.operand2});
+				break;
+			case 'divide':
+				calcFields.divide.push({'fieldName': operation.fieldName, 'operand1': operation.operand1, 'operand2': operation.operand2});
+				break;
+		}
 	});
 	
 	var mCurves = aggregate(content, fields, groupBy, aggrObj, calcFields);
@@ -234,6 +270,29 @@ $('#modalButtonSave').click(function(event) {
 		alert('Please fill in the field name.');
 		return;
 	}
+
+	var operand1 = $('#operand1').val();
+	var operator = $('#operator').val();
+	var operand2 = $('#operand2').val();
+	
+	if (operand1 == undefined || operand2 == undefined)
+	{
+		alert('Please at least add one field into "Sum values".');
+		return;
+	}
+	
+	var operation = {'fieldName': calcFieldName,
+		'operand1': operand1,
+		'operator': operator,
+		'operand2': operand2
+		};
+	
+	var input = $('<input>').attr('type', 'hidden').val(JSON.stringify(operation));
+	var li = $('<li>').html(calcFieldName).append('<i class="item-remove">✖</i>').append(input);
+	$('#calculated').append(li);
+	
+	$('#modalAddCalcField').modal('hide');
+	updatePivotTable();
 });
 
 
@@ -305,7 +364,7 @@ function aggregate(collection, originalFields, groupVariables, aggregationFields
 
     _.forEach(calculatedFields.divide, function(obj) {
         _.forEach(aggregateResult, function(n) {
-            n[obj['fieldName']] = n[obj['numerator']] / n[obj['denominator']];
+            n[obj['fieldName']] = n[obj['operand1']] / n[obj['operand2']];
             });
 
         fields.push({'indx': fields.length + 1, 'name': obj['fieldName'], 'type': 'number'});
@@ -340,7 +399,7 @@ $("#buildCurves").click(function() {
     aggrFields.sum.push(originationVariable);
 
     var calcFields = {add: [], subtract: [], multiply: [], divide: []};
-    calcFields.divide.push({'fieldName': 'charge_off_rate', 'numerator': chargeOffVariable, 'denominator': originationVariable});
+    calcFields.divide.push({'fieldName': 'charge_off_rate', 'operand1': chargeOffVariable, 'operand2': originationVariable});
 
     mCurves = aggregate(content, fields, groupVariables, aggrFields, calcFields);
 
