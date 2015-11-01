@@ -6,7 +6,7 @@
         <div class="col-lg-10">
             <div class="row">
                 <div class="col-lg-12">
-                    <h4><strong>Build maturation curves</strong></h4>
+                    <h4><strong>Aggregate data</strong></h4>
                     <hr>
                     <?= $this->Flash->render() ?>
                     <table class="table table-hover table-striped">
@@ -22,7 +22,7 @@
                             <?php foreach ($files as $file): ?>
                                 <tr>
                                     <td>
-                                        <?= $this->Html->link('Build curves', ['controller' => 'MaturationCurves', 'action' => 'build_maturation_curves', $file->id]); ?>
+                                        <?= $this->Html->link('Aggregate', ['controller' => 'MaturationCurves', 'action' => 'build', $file->id]); ?>
                                     </td>
                                     <td><?= h($file->name) ?></td>
                                     <td><?= h($file->created) ?></td>
