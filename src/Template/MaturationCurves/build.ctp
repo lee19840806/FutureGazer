@@ -24,7 +24,7 @@
                                 <div class="panel-heading">Group by (drop here)</div>
                                 <div class="panel-body">
                                 	<div class="row">
-                                    	<ul id="groupBy" style="min-height: 10px; padding-bottom: 10px; list-style: none;"></ul>
+                                    	<ul id="groupBy" style="min-height: 10px; padding-bottom: 10px;"></ul>
                                     </div>
                                 </div>
                             </div>
@@ -199,6 +199,7 @@ var sortableCalculated = Sortable.create(document.getElementById('calculated'), 
 	filter: '.item-remove',
 	onFilter: function (event) {
 		event.item.parentNode.removeChild(event.item);
+		updatePivotTable();
 		},
 	onSort: function (event) {
 		updatePivotTable();
@@ -293,19 +294,13 @@ $('#modalButtonSave').click(function(event) {
 	
 	$('#modalAddCalcField').modal('hide');
 	updatePivotTable();
+
+	
+	$('#calcFieldName').val('');
+	$('#operand1').html('');
+	$('#operator').val('add');
+	$('#operand2').html('');
 });
-
-
-
-
-
-
-
-
-
-
-
-
 
 var handsonTable = new Handsontable(document.getElementById('data'), {
     data: content,
@@ -378,46 +373,16 @@ function aggregate(collection, originalFields, groupVariables, aggregationFields
     return result;
 }
 
-$("#buildCurves").click(function() {
-    var fileID = <?= $file['id'] ?>;
-    
-    var segmentVariableIndexes = $.map($("[name='segmentVariables[]']"), function(element, index) { return (element.checked == true) ? index : undefined; });
-    
-    var originationIndex = parseInt($("[name='origination']").val());
-    var chargeOffIndex = parseInt($("[name='chargeOff']").val());
-    var mobIndex = parseInt($("[name='MoB']").val());
-    
-    var originationVariable = fields[originationIndex]['name'];
-    var chargeOffVariable = fields[chargeOffIndex]['name'];
-    var mobVariable = fields[mobIndex]['name'];
-
-    var groupVariables = _.map(segmentVariableIndexes, function(value) { return fields[value]['name']; });
-    groupVariables.push(fields[mobIndex]['name']);
-
-    var aggrFields = {count: [], sum: [], average: []};
-    aggrFields.sum.push(chargeOffVariable);
-    aggrFields.sum.push(originationVariable);
-
-    var calcFields = {add: [], subtract: [], multiply: [], divide: []};
-    calcFields.divide.push({'fieldName': 'charge_off_rate', 'operand1': chargeOffVariable, 'operand2': originationVariable});
-
-    mCurves = aggregate(content, fields, groupVariables, aggrFields, calcFields);
-
-    _.forEach(mCurves.fields, function(obj) {
-        obj['file_id'] = fileID;
-        });
-
-    $("#divMaturationCurves").slideUp();
-    handsonTableMaturationCurves.updateSettings({data: mCurves.content, colHeaders: _.pluck(mCurves.fields, 'name')});
-    $("#divMaturationCurves").slideDown();
-});
-
 $("#saveCurves").click(function() {
+	var thisButton = $(this);
+	thisButton.attr('disabled', 'disabled');
+	
     var fileName = $("#curveName").val();
     
     if (fileName == "")
     {
         alert("Please enter a name for this summary data");
+        thisButton.removeAttr('disabled');
         return;
     }
     
@@ -430,6 +395,7 @@ $("#saveCurves").click(function() {
             if (data == "0")
             {
                 alert("File name '" + fileName + "' existed, please use another name.");
+                thisButton.removeAttr('disabled');
             }
             else
             {
@@ -444,14 +410,16 @@ $("#saveCurves").click(function() {
                         if (result == "0")
                         {
                             alert("An error has occured when trying to save maturation curve data. Please try again.");
+                            thisButton.removeAttr('disabled');
                         }
                         else
                         {
                             alert("Summary data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                            thisButton.removeAttr('disabled');
                         }
                         })
                     .fail(function(jqXHR, textStatus, errorThrown) {
-                        var a = 1;
+                    	thisButton.removeAttr('disabled');
                         });
             }
             });
