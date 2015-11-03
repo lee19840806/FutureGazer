@@ -239,7 +239,7 @@ function updatePivotTable()
 		}
 	});
 	
-	var mCurves = aggregate(content, fields, groupBy, aggrObj, calcFields);
+	mCurves = aggregate(content, fields, groupBy, aggrObj, calcFields);
 
 	_.forEach(mCurves.fields, function(obj) {
         obj['file_id'] = fileID;
