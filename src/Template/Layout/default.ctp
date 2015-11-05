@@ -12,18 +12,10 @@
     <link rel="icon" href="/favicon.ico">
     <title>Future Gazer</title>
 
-    <link href="/css/bootstrap.css" rel="stylesheet">
-    <link href="/css/fileinput.css" rel="stylesheet">
-    <link href="/css/handsontable.full.css" rel="stylesheet">
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
     
-    <script src="/js/jquery-2.1.4.js"></script>
-    <script src="/js/bootstrap.js"></script>
-    <script src="/js/fileinput.js"></script>
-    <script src="/js/papaparse.js"></script>
-    <script src="/js/handsontable.full.js"></script>
-    <script src="/js/Chart.js"></script>
-    <script src="/js/lodash.min.js"></script>
-    <script src="/js/Sortable.js"></script>
+    <script src="/js/jquery-2.1.4.min.js"></script>
+    <script src="/js/bootstrap.min.js"></script>
 </head>
 
 <body>

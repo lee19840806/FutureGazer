@@ -1,3 +1,6 @@
+<link href="/css/fileinput.min.css" rel="stylesheet">
+<script src="/js/fileinput.min.js"></script>
+<script src="/js/papaparse.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">

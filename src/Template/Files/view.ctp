@@ -1,3 +1,6 @@
+<link href="/css/handsontable.full.min.css" rel="stylesheet">
+<script src="/js/handsontable.full.min.js"></script>
+<script src="/js/lodash.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
