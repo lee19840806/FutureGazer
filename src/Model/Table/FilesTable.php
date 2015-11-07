@@ -6,7 +6,6 @@ use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
-use Cake\Datasource\ConnectionManager;
 
 /**
  * Files Model
@@ -17,9 +16,6 @@ use Cake\Datasource\ConnectionManager;
  */
 class FilesTable extends Table
 {
-    private $mongoDatabase = 'DataFiles';
-    private $mongoCollection = 'Files';
-
     /**
      * Initialize method
      *

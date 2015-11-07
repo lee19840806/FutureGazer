@@ -19,7 +19,7 @@
                         </div>
                         <div class="form-group">
                             <label for="userfile">Step 1. Click "Browse" button and select a CSV file: </label>
-                            <input id="userFileUpload" name="userfile" type="file" class="file-loading" accept=".csv" required="true">
+                            <input id="userFileUpload" name="userfile" type="file" class="file-loading" accept=".csv" required="required">
                         </div>
                         <br>
                         <hr>
