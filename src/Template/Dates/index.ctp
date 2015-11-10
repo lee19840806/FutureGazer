@@ -3,6 +3,7 @@
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/lodash.min.js"></script>
 <script src="/js/bootstrap-datepicker.min.js"></script>
+<script src="/js/moment.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -50,6 +51,14 @@
 								</div>
 							</form>
 						</div>
+						<div class="col-lg-2">
+	                    	<form>
+	                    		<div class="form-group">
+	                    			<label for="seriesName">Name of series</label>
+				                    <input class="form-control input-sm" id="seriesName" type="text" value="month_end" maxlength="32" required />
+								</div>
+							</form>
+						</div>
 					</div>
 					<div class="row">
 						<div class="col-lg-12">
@@ -68,7 +77,27 @@ $('#datepicker').datepicker({
 });
 
 $('#generate').click(function() {
-	alert('generating date series');
+	var startDate = moment($('#startDate').datepicker('getDate'));
+	var endDate = moment($('#endDate').datepicker('getDate'));
+	var frequency = $('#frequency').val();
+	var alignment = $('#alignment').val();
+	var seriesName = $('#seriesName').val();
+	
+	if (startDate == null || endDate == null)
+	{
+		alert('Please pick a start date and an end date.');
+		return;
+	}
+
+	if (seriesName == '')
+	{
+		alert('Please enter the name of series.');
+		return;
+	}
+	
+	var a = 1;
+	
+	alert(startDate);
 });
 </script>
 
