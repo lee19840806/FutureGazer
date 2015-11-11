@@ -32,10 +32,11 @@
 	                    		<div class="form-group">
 	                    			<label for="frequency">Series frequency</label>
 				                    <select class="form-control input-sm" id="frequency">
-										<option value="daily">Daily</option>
-										<option value="monthly" selected="selected">Monthly</option>
-										<option value="quarterly">Quarterly</option>
-										<option value="annually">Annually</option>
+										<option value="days">Daily</option>
+										<option value="weeks">Weekly</option>
+										<option value="months" selected="selected">Monthly</option>
+										<option value="quarters">Quarterly</option>
+										<option value="years">Annually</option>
 									</select>
 								</div>
 							</form>
@@ -65,12 +66,33 @@
 							<button class="btn btn-sm btn-info" id="generate"><strong>Generate date series</strong></button>
 						</div>
 					</div>
+					<hr>
+					<div class="row">
+                        <div class="col-lg-12">
+                            <div class="panel panel-primary" style="z-index: -2;">
+                                <div class="panel-heading" style="z-index: -2;">Date series</div>
+                                <div class="panel-body" style="z-index: -2;">
+                                    <div id="data" style="height: 400px; width: auto; overflow: hidden; z-index: 0;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <br>
+                    <br>
                 </div>
             </div>
         </div>
     </div>
 </div>
 <script>
+var handsonTable = new Handsontable(document.getElementById('data'), {
+    data: [],
+    minSpareRows: 0,
+    rowHeaders: true,
+    colHeaders: [],
+    contextMenu: false
+    });
+
 $('#datepicker').datepicker({
 	keyboardNavigation: false,
     autoclose: true
@@ -82,8 +104,10 @@ $('#generate').click(function() {
 	var frequency = $('#frequency').val();
 	var alignment = $('#alignment').val();
 	var seriesName = $('#seriesName').val();
+	var dates = [];
+	var fields = [];
 	
-	if (startDate == null || endDate == null)
+	if (!startDate.isValid() || !endDate.isValid())
 	{
 		alert('Please pick a start date and an end date.');
 		return;
@@ -94,10 +118,42 @@ $('#generate').click(function() {
 		alert('Please enter the name of series.');
 		return;
 	}
-	
-	var a = 1;
-	
-	alert(startDate);
+
+	var alignmentOption = '';
+
+	switch (frequency)
+	{
+		case 'days': alignmentOption = 'day'; break;
+		case 'weeks': alignmentOption = 'week'; break;
+		case 'months': alignmentOption = 'month'; break;
+		case 'quarters': alignmentOption = 'quarter'; break;
+		case 'years': alignmentOption = 'year'; break;
+	}
+
+	var currentDate = startDate;
+
+	while (currentDate <= endDate)
+	{
+		var d = currentDate;
+
+		if (alignment == 'start')
+		{
+			d = d.startOf(alignmentOption);
+		}
+		else
+		{
+			d = d.endOf(alignmentOption);
+		}
+
+		var dateObj = {};
+		dateObj[seriesName] = d.format('YYYY-MM-DD');
+		dates.push(dateObj);
+		currentDate.add(1, frequency);
+	}
+
+	fields.push({'indx': 1, 'name': seriesName, 'type': 'string'});
+
+	handsonTable.updateSettings({data: dates, colHeaders: _.pluck(fields, 'name')});
 });
 </script>
 
