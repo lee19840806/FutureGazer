@@ -69,6 +69,14 @@
 					<hr>
 					<div class="row">
                         <div class="col-lg-12">
+                        	<div class="form-group">
+	                        	<button id="save" type="button" class="btn btn-sm btn-info">
+	                                <strong>Save date series</strong>
+	                            </button>
+                            </div>
+                            <div class="form-group">
+                            	<input type="text" id="dataSetName" class="form-control" placeholder="Name for this data set" required>
+                            </div>
                             <div class="panel panel-primary" style="z-index: -2;">
                                 <div class="panel-heading" style="z-index: -2;">Date series</div>
                                 <div class="panel-body" style="z-index: -2;">
@@ -85,6 +93,9 @@
     </div>
 </div>
 <script>
+var dates = [];
+var fields = [];
+
 var handsonTable = new Handsontable(document.getElementById('data'), {
     data: [],
     minSpareRows: 0,
@@ -104,8 +115,6 @@ $('#generate').click(function() {
 	var frequency = $('#frequency').val();
 	var alignment = $('#alignment').val();
 	var seriesName = $('#seriesName').val();
-	var dates = [];
-	var fields = [];
 	
 	if (!startDate.isValid() || !endDate.isValid())
 	{
@@ -154,6 +163,56 @@ $('#generate').click(function() {
 	fields.push({'indx': 1, 'name': seriesName, 'type': 'string'});
 
 	handsonTable.updateSettings({data: dates, colHeaders: _.pluck(fields, 'name')});
+});
+
+$("#save").click(function() {
+	var thisButton = $(this);
+	thisButton.attr('disabled', 'disabled');
+	
+    var fileName = $("#dataSetName").val();
+    
+    if (fileName == "")
+    {
+        alert("Please enter a name for this data")
+        thisButton.removeAttr('disabled');
+        return;
+    }
+    
+    $.ajax({
+        method: "GET",
+        url: "/Files/name_available",
+        data: {'fileName': fileName}
+    })
+        .done(function(data) {
+            if (data == "0")
+            {
+                alert("File name '" + fileName + "' existed, please use another name.");
+                thisButton.removeAttr('disabled');
+            }
+            else
+            {
+                $.ajax({
+                    method: "POST",
+                    url: "/Files/client_save_data",
+                    data: {"fileName": fileName, "fileFields": JSON.stringify(fields), "fileContent": JSON.stringify(dates)}
+                })
+                    .done(function(result) {
+                        if (result == "0")
+                        {
+                            alert("An error has occured when trying to save this data. Please try again.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        else
+                        {
+                            alert("Data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                    	thisButton.removeAttr('disabled');
+                        });
+            }
+            });
 });
 </script>
 
