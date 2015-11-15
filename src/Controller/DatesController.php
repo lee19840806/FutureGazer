@@ -13,11 +13,14 @@ class DatesController extends AppController
 {
     public function index()
     {
+    	
+    }
+    
+	public function connect()
+    {
         $this->loadModel('Files');
-        
-        $this->paginate = ['contain' => ['Users']];
-        $this->set('files', $this->paginate($this->Files));
-        $this->set('_serialize', ['files']);
+        $fileNames = $this->Files->find('list')->select(['name'])->where(['Files.user_id' => $this->Auth->user('id')])->all()->toArray();
+        $this->set('fileNames', $fileNames);
     }
 }
 

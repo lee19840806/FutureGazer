@@ -115,6 +115,21 @@ class FilesController extends AppController
         }
     }
     
+    public function ajax_get_file()
+    {
+    	$this->request->allowMethod(['post']);
+    	$this->layout = 'ajax';
+    
+    	if (!$this->Files->isOwnedBy($this->request->data['file_id'], $this->Auth->user('id')))
+    	{
+    		$this->set('result', 'The file is not owned by the user');
+    		return;
+    	}
+    	
+    	$file = $this->Files->find()->where(['Files.id' => $this->request->data['file_id']])->contain(['FileFields', 'FileContents'])->first()->toArray();
+    	$this->set('result', json_encode($file));
+    }
+    
     public function delete($id = NULL)
     {
         $this->request->allowMethod(['post', 'delete']);

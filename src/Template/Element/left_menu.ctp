@@ -14,5 +14,6 @@
         </li>
         <li role="presentation"><a href="/MaturationCurves/list_files"><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Aggregate data</a></li>
         <li role="presentation"><a href="/Dates"><span class="glyphicon glyphicon-calendar" aria-hidden="true"></span> Generate date series</a></li>
+        <li role="presentation"><a href="/Dates/Connect"><span class="glyphicon glyphicon-resize-small" aria-hidden="true"></span> Connect data</a></li>
     </ul>
 </div>

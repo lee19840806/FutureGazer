@@ -18,8 +18,8 @@
                         <dd>Upload data from a file: upload a CSV file which contains vintage-based performance data, from your local disk to the platform.</dd>
                         <dd>List my data: view the content of uploaded data, or delete uploaded data if you don't need it any more.</dd>
                         <br>
-                        <dt><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Build maturation curves</dt>
-                        <dd>Build vintage maturation curves base on the uploaded porfolio performance data.</dd>
+                        <dt><span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Aggregate data</dt>
+                        <dd>Group, sum, and add calculated fields to your uploaded data and save the aggregated data for later use.</dd>
                     </dl>
                 </div>
             </div>
