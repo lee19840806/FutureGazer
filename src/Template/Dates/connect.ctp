@@ -24,7 +24,7 @@
 		                    		<label for="files1">Select data set as A&nbsp;&nbsp;</label>
 		                    		<?= $this->Form->select('selectFiles1', $fileNames, ['id' => 'selectFiles1', 'class' => 'form-control input-sm']); ?>
 	                    		</div>
-	                    		<button class="btn btn-sm btn-primary" id="btnLoad1" type="button">Load data A</button>
+	                    		<button class="btn btn-sm btn-primary" id="btnLoad1" type="button">Load data</button>
                     		</form>
                     		<br>
                     		<div class="panel panel-primary">
@@ -40,7 +40,7 @@
 		                    		<label for="files2">Select data set as B&nbsp;&nbsp;</label>
 		                    		<?= $this->Form->select('selectFiles2', $fileNames, ['id' => 'selectFiles2', 'class' => 'form-control input-sm']); ?>
 	                    		</div>
-	                    		<button class="btn btn-sm btn-primary" id="btnLoad2" type="button">Load data B</button>
+	                    		<button class="btn btn-sm btn-primary" id="btnLoad2" type="button">Load data</button>
                     		</form>
                     		<br>
                     		<div class="panel panel-primary">
@@ -73,15 +73,21 @@ var handson2 = new Handsontable(document.getElementById('handson2'), {
     contextMenu: false
     });
 
+var handsonTables = {'handson1': handson1, 'handson2': handson2};
+
 $('#btnLoad1').click(loadData);
 $('#btnLoad2').click(loadData);
 
 function loadData(event)
 {
-	targetID = $(event.target).attr('id');
-	targetNum = targetID.substr(-1, 1);
+	var target = $(event.target);
+	var targetID = target.attr('id');
+	var targetNum = targetID.substr(-1, 1);
 	
-	fileID = $('#selectFiles' + targetNum).val();
+	var fileID = $('#selectFiles' + targetNum).val();
+
+	target.attr('disabled', 'disabled');
+	target.html('Loading...');
 	
 	$.ajax({
         method: "POST",
@@ -89,7 +95,11 @@ function loadData(event)
         data: {'file_id': fileID}
     })
     .done(function(result) {
-		var a = 1;
+        var resultObj = $.parseJSON(result);
+    	handsonTables['handson' + targetNum].updateSettings({data: $.parseJSON(resultObj.file_content.content), colHeaders: _.pluck(resultObj.file_fields, 'name')});
+
+    	target.removeAttr('disabled');
+    	target.html('Load data');
     });
 }
 </script>
