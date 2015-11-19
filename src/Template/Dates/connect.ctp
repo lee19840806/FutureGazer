@@ -105,6 +105,8 @@
     </div>
 </div>
 <script>
+var dataSets = {'dataSet1': {data: [], fields: []}, 'dataSet2': {data: [], fields: []}, 'resultData': {data: [], fields: []}};
+
 var handson1 = new Handsontable(document.getElementById('handson1'), {
     data: [],
     minSpareRows: 0,
@@ -134,6 +136,8 @@ var handsonTables = {'handson1': handson1, 'handson2': handson2, 'handsonNew': h
 $('#btnLoad1').click(loadData);
 $('#btnLoad2').click(loadData);
 
+$('#btnConnect').click(connectData);
+
 function loadData(event)
 {
 	var target = $(event.target);
@@ -152,11 +156,68 @@ function loadData(event)
     })
     .done(function(result) {
         var resultObj = $.parseJSON(result);
+        dataSets['dataSet' + targetNum]['data'] = $.parseJSON(resultObj.file_content.content);
+        dataSets['dataSet' + targetNum]['fields'] = resultObj.file_fields;
     	handsonTables['handson' + targetNum].updateSettings({data: $.parseJSON(resultObj.file_content.content), colHeaders: _.pluck(resultObj.file_fields, 'name')});
 
     	target.removeAttr('disabled');
     	target.html('Load data');
     });
+}
+
+function connectData(event)
+{
+	var left = dataSets['dataSet1'];
+	var right = dataSets['dataSet2'];
+
+	if (left.data.length == 0)
+	{
+		alert('Data set A is empty, please load data first.');
+		return;
+	}
+
+	if (right.data.length == 0)
+	{
+		alert('Data set B is empty, please load data first.');
+		return;
+	}
+
+	var connectType = $('#joinType').val();
+	var resultData = [];
+
+	switch (connectType)
+	{
+		case 'cartesian': resultData = cartesianProduct(left, right); break;
+		case 'left': resultData = leftJoin(left, right); break;
+		case 'inner': resultData = innerJoin(left, right); break;
+		default: alert('Unknown connection type.');
+	}
+}
+
+function cartesianProduct(left, right)
+{
+	var result = {'data': [], 'fields': []};
+
+	_.forEach(left.data, function(leftDataRow) {
+		_.forEach(right.data, function(rightDataRow) {
+			var mergedRow = _.merge(leftDataRow, rightDataRow);
+			result.data.push(mergedRow);
+		});
+	});
+
+	result.fields = _.union(left.fields, right.fields);
+
+	return result;
+}
+
+function leftJoin(leftData, rightData)
+{
+	alert('This function is under development.');
+}
+
+function innerJoin(leftData, rightData)
+{
+	alert('This function is under development.');
 }
 </script>
 
