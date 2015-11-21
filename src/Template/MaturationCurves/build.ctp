@@ -391,7 +391,7 @@ $("#saveCurves").click(function() {
     }
     
     $.ajax({
-        method: "GET",
+        method: "POST",
         url: "/Files/name_available",
         data: {'fileName': fileName}
     })
@@ -403,8 +403,6 @@ $("#saveCurves").click(function() {
             }
             else
             {
-                var m = {"fileName": fileName, "fileFields": mCurves.fields, "fileContent": mCurves.content};
-
                 $.ajax({
                     method: "POST",
                     url: "/Files/client_save_data",

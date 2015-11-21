@@ -71,7 +71,7 @@ class FilesController extends AppController
     
     public function name_available()
     {
-        $this->request->allowMethod(['get']);
+        $this->request->allowMethod(['post']);
         $this->layout = 'ajax';
         
         $fileName = $this->Files->find()->where(['Files.user_id' => $this->Auth->user('id'), 'Files.name' => $this->request->query['fileName']])->first();

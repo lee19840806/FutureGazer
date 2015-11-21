@@ -179,7 +179,7 @@ $("#save").click(function() {
     }
     
     $.ajax({
-        method: "GET",
+        method: "POST",
         url: "/Files/name_available",
         data: {'fileName': fileName}
     })

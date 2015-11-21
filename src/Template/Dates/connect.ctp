@@ -32,11 +32,11 @@
                     	<div class="col-lg-12">
 	                    	<ul class="nav nav-tabs" role="tablist">
 			                    <li role="presentation" class="active"><a href="#rawData" aria-controls="rawData" role="tab" data-toggle="tab">Raw data sets</a></li>
-			                    <li role="presentation"><a href="#newData" aria-controls="newData" role="tab" data-toggle="tab">New data set</a></li>
+			                    <li role="presentation"><a href="#newData" id="tabNewData" aria-controls="newData" role="tab" data-toggle="tab">New data set</a></li>
 			                </ul>
 			                
 			                <div class="tab-content">
-			                    <div role="tabpanel" class="tab-pane fade in active" id="rawData">
+			                    <div role="tabpanel" class="tab-pane active" id="rawData">
 			                    	<div class="row">
 			                    		<br>
 				                        <div class="col-lg-6">
@@ -73,7 +73,7 @@
 				                    	</div>
 			                    	</div>
 			                    </div>
-			                    <div role="tabpanel" class="tab-pane fade" id="newData">
+			                    <div role="tabpanel" class="tab-pane" id="newData">
 			                    	<div class="row">
 			                    		<div class="col-lg-12">
 				                        	<br>
@@ -182,8 +182,9 @@ function connectData(event)
 		return;
 	}
 
+	$('#tabNewData').tab('show');
 	var connectType = $('#joinType').val();
-	var resultData = [];
+	var resultData = {};
 
 	switch (connectType)
 	{
@@ -192,6 +193,10 @@ function connectData(event)
 		case 'inner': resultData = innerJoin(left, right); break;
 		default: alert('Unknown connection type.');
 	}
+	
+	dataSets['resultData']['data'] = resultData.data;
+    dataSets['resultData']['fields'] = resultData.fields;
+	handsonTables['handsonNew'].updateSettings({data: resultData.data, colHeaders: _.pluck(resultData.fields, 'name')});
 }
 
 function cartesianProduct(left, right)
@@ -201,11 +206,16 @@ function cartesianProduct(left, right)
 	_.forEach(left.data, function(leftDataRow) {
 		_.forEach(right.data, function(rightDataRow) {
 			var mergedRow = _.merge(leftDataRow, rightDataRow);
-			result.data.push(mergedRow);
+			result.data.push(_.clone(mergedRow, true));
 		});
 	});
 
-	result.fields = _.union(left.fields, right.fields);
+	var combinedFields = _.union(left.fields, right.fields);
+
+	_.forEach(combinedFields, function(field, key) {
+		var f = {'indx': key + 1, 'name': field['name'], 'type': field['type']};
+		result.fields.push(f);
+	});
 
 	return result;
 }
@@ -219,6 +229,56 @@ function innerJoin(leftData, rightData)
 {
 	alert('This function is under development.');
 }
+
+$("#btnSave").click(function() {
+	var thisButton = $(this);
+	thisButton.attr('disabled', 'disabled');
+	
+    var fileName = $("#dataSetName").val();
+    
+    if (fileName == "")
+    {
+        alert("Please enter a name for this summary data");
+        thisButton.removeAttr('disabled');
+        return;
+    }
+    
+    $.ajax({
+        method: "POST",
+        url: "/Files/name_available",
+        data: {'fileName': fileName}
+    })
+        .done(function(data) {
+            if (data == "0")
+            {
+                alert("File name '" + fileName + "' existed, please use another name.");
+                thisButton.removeAttr('disabled');
+            }
+            else
+            {
+                $.ajax({
+                    method: "POST",
+                    url: "/Files/client_save_data",
+                    data: {"fileName": fileName, "fileFields": JSON.stringify(dataSets['resultData']['fields']), "fileContent": JSON.stringify(dataSets['resultData']['data'])}
+                })
+                    .done(function(result) {
+                        if (result == "0")
+                        {
+                            alert("An error has occured when trying to save maturation curve data. Please try again.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        else
+                        {
+                            alert("Summary data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                    	thisButton.removeAttr('disabled');
+                        });
+            }
+            });
+});
 </script>
 
 
