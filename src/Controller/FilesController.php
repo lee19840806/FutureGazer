@@ -74,7 +74,7 @@ class FilesController extends AppController
         $this->request->allowMethod(['post']);
         $this->layout = 'ajax';
         
-        $fileName = $this->Files->find()->where(['Files.user_id' => $this->Auth->user('id'), 'Files.name' => $this->request->query['fileName']])->first();
+        $fileName = $this->Files->find()->where(['Files.user_id' => $this->Auth->user('id'), 'Files.name' => $this->request->data['fileName']])->first();
         
         if ($fileName == null)
         {

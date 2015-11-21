@@ -259,6 +259,7 @@ $("#btnSave").click(function() {
                 $.ajax({
                     method: "POST",
                     url: "/Files/client_save_data",
+                    timeout: 30000,
                     data: {"fileName": fileName, "fileFields": JSON.stringify(dataSets['resultData']['fields']), "fileContent": JSON.stringify(dataSets['resultData']['data'])}
                 })
                     .done(function(result) {
