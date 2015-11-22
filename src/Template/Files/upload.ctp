@@ -1,6 +1,7 @@
 <link href="/css/fileinput.min.css" rel="stylesheet">
 <script src="/js/fileinput.min.js"></script>
 <script src="/js/papaparse.min.js"></script>
+<script src="/js/moment.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -110,13 +111,13 @@ $(document).on('ready', function(){
 
                 	    if (isNumber)
                 	    {
-                	        dataType = $('<td>').append($('<select>').attr('name', "dataType[" + value + "]")).children()
+                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
                                 .append($('<option>').attr('value', 'string').html('String'))
                                 .append($('<option>').attr('value', 'number').attr('selected', 'selected').html('Number'));
                 	    }
                 	    else
                 	    {
-                	        dataType = $('<td>').append($('<select>').attr('name', "dataType[" + value + "]")).children()
+                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
                                 .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
                                 .append($('<option>').attr('value', 'number').html('Number'));
                 	    }
