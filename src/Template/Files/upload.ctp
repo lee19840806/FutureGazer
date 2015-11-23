@@ -96,11 +96,17 @@ $(document).on('ready', function(){
             	    $("#csvMeta").val(JSON.stringify(results.meta));
             	    
             	    $.each(results.meta.fields, function(index, value) {
+                	    var isDateTime = true;
                 	    var isNumber = true;
                 	    var fieldName = this;
                 	    
             	        $.each(results.data, function(dataIndex, dataValue) {
-            	            if (!$.isNumeric(dataValue[fieldName]) && (dataValue[fieldName] != ""))
+                	        if ((moment(dataValue[fieldName], ["MM-DD-YYYY", "YYYY-MM-DD"], true).isValid() == false) && (dataValue[fieldName] != ""))
+                	        {
+                	        	isDateTime = false;
+                	        }
+                	        
+            	        	if (!$.isNumeric(dataValue[fieldName]) && (dataValue[fieldName] != ""))
             	            {
             	                isNumber = false;
             	            }
@@ -109,15 +115,24 @@ $(document).on('ready', function(){
                 	    var columnName = $('<td>').html(value);
                 	    var dataType;
 
-                	    if (isNumber)
+                	    if (isDateTime)
+                	    {
+                	    	dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+            	        		.append($('<option>').attr('value', 'string').attr('selected', 'selected').html('Date'))
+                            	.append($('<option>').attr('value', 'string').html('String'))
+                            	.append($('<option>').attr('value', 'number').html('Number'));
+                	    }
+                	    else if (isNumber)
                 	    {
                 	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+                	        	.append($('<option>').attr('value', 'string').html('Date'))
                                 .append($('<option>').attr('value', 'string').html('String'))
                                 .append($('<option>').attr('value', 'number').attr('selected', 'selected').html('Number'));
                 	    }
                 	    else
                 	    {
                 	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+                	        	.append($('<option>').attr('value', 'string').html('Date'))
                                 .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
                                 .append($('<option>').attr('value', 'number').html('Number'));
                 	    }
