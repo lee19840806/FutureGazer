@@ -1,5 +1,6 @@
 <link href="/css/fileinput.min.css" rel="stylesheet">
 <script src="/js/fileinput.min.js"></script>
+<script src="/js/lodash.min.js"></script>
 <script src="/js/papaparse.min.js"></script>
 <script src="/js/moment.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
@@ -95,13 +96,12 @@ $(document).on('ready', function(){
             	    $("#step3").slideDown('fast');
             	    $("#csvMeta").val(JSON.stringify(results.meta));
             	    
-            	    $.each(results.meta.fields, function(index, value) {
+            	    _.forEach(results.meta.fields, function(fieldName, index) {
                 	    var isDateTime = true;
                 	    var isNumber = true;
-                	    var fieldName = this;
                 	    
-            	        $.each(results.data, function(dataIndex, dataValue) {
-                	        if ((moment(dataValue[fieldName], ["MM-DD-YYYY", "YYYY-MM-DD"], true).isValid() == false) && (dataValue[fieldName] != ""))
+            	        _.forEach(results.data, function(dataValue, dataIndex) {
+                	        if ((isDateTime == true) && (moment(dataValue[fieldName], "YYYY-MM-DD", true).isValid() == false) && (dataValue[fieldName] != ""))
                 	        {
                 	        	isDateTime = false;
                 	        }
@@ -110,28 +110,33 @@ $(document).on('ready', function(){
             	            {
             	                isNumber = false;
             	            }
+
+            	            if (isDateTime == false && isNumber == false)
+            	            {
+								return false;
+            	            }
             	        });
                 	    
-                	    var columnName = $('<td>').html(value);
+                	    var columnName = $('<td>').html(fieldName);
                 	    var dataType;
 
                 	    if (isDateTime)
                 	    {
-                	    	dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+                	    	dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + fieldName + "]")).children()
             	        		.append($('<option>').attr('value', 'string').attr('selected', 'selected').html('Date'))
                             	.append($('<option>').attr('value', 'string').html('String'))
                             	.append($('<option>').attr('value', 'number').html('Number'));
                 	    }
                 	    else if (isNumber)
                 	    {
-                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + fieldName + "]")).children()
                 	        	.append($('<option>').attr('value', 'string').html('Date'))
                                 .append($('<option>').attr('value', 'string').html('String'))
                                 .append($('<option>').attr('value', 'number').attr('selected', 'selected').html('Number'));
                 	    }
                 	    else
                 	    {
-                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + value + "]")).children()
+                	        dataType = $('<td>').append($('<select class="form-control input-sm">').attr('name', "dataType[" + fieldName + "]")).children()
                 	        	.append($('<option>').attr('value', 'string').html('Date'))
                                 .append($('<option>').attr('value', 'string').attr('selected', 'selected').html('String'))
                                 .append($('<option>').attr('value', 'number').html('Number'));
