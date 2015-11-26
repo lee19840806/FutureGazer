@@ -106,7 +106,7 @@ $(document).on('ready', function(){
                 	        	isDateTime = false;
                 	        }
                 	        
-            	        	if (!$.isNumeric(dataValue[fieldName]) && (dataValue[fieldName] != ""))
+            	        	if ((isNumber == true) && (!$.isNumeric(dataValue[fieldName])) && (dataValue[fieldName] != ""))
             	            {
             	                isNumber = false;
             	            }
