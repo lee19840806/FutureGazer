@@ -8,7 +8,7 @@
             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
             <span class="glyphicon glyphicon-duplicate" aria-hidden="true"></span> Manage my data <span class="caret"></span></a>
             <ul class="dropdown-menu">
-                <li><a href="/Files/upload"><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> Upload data from a file</a></li>
+                <li><a href="/Files/upload_file"><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true"></span> Upload data from a file</a></li>
                 <li><a href="/Files/list_files"><span class="glyphicon glyphicon-th-list" aria-hidden="true"></span> List my data</a></li>
             </ul>
         </li>

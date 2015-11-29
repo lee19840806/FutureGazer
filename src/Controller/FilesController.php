@@ -22,6 +22,11 @@ class FilesController extends AppController
         
     }
     
+    public function upload_file()
+    {
+    
+    }
+    
     public function submitFile()
     {
         if ($this->request->is('post'))
