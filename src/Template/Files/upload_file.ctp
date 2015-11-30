@@ -81,30 +81,30 @@
 		</select>
 	</div>
 </form>
-<form class="form-inline" id="selectTextFormat">
-	<div class="form-group">
-		<select class="form-control input-sm" name="">
-			<option value="general">General</option>
-		</select>
-	</div>
-</form>
-<form class="form-inline" id="selectNumericFormat">
-	<div class="form-group">
-		<select class="form-control input-sm" name="">
-			<option value="0">Plain Number</option>
-			<option value="0,0">1000 Separator (,)</option>
-			<option value="0,0.00">1000 Separator (,) and 2 decimals</option>
-			<option value="0%">Percentage</option>
-			<option value="0.00%">Percentage and 2 decimals</option>
-			<option value="$0,0">Dollar</option>
-			<option value="$0,0.00">Dollar and 2 decimals</option>
-		</select>
-	</div>
-</form>
-<form class="form-inline" id="selectDateFormat">
+<form class="form-inline" id="selectFormat_date">
 	<div class="form-group">
 		<select class="form-control input-sm" name="">
 			<option value="YYYY-MM-DD">YYYY-MM-DD</option>
+		</select>
+	</div>
+</form>
+<form class="form-inline" id="selectFormat_numeric">
+	<div class="form-group">
+		<select class="form-control input-sm" name="">
+			<option value="0">1234567</option>
+			<option value="0,0">1,234,567</option>
+			<option value="0,0.00">1,234,567.89</option>
+			<option value="0%">12%</option>
+			<option value="0.00%">12.34%</option>
+			<option value="$0,0">$1,234,567</option>
+			<option value="$0,0.00">$1,234,567.89</option>
+		</select>
+	</div>
+</form>
+<form class="form-inline" id="selectFormat_text">
+	<div class="form-group">
+		<select class="form-control input-sm" name="">
+			<option value="general">General</option>
 		</select>
 	</div>
 </form>
@@ -134,59 +134,14 @@ var readFile = function(fileHandler)
         	    $("#step3").slideDown('fast');
         	    $("#csvMeta").val(JSON.stringify(results.meta));
 
-        	    var rData = processCsvData(results);
-        	    
-        	    _.forEach(results.meta.fields, function(fieldName, index) {
-            	    var isDateTime = true;
-            	    var isNumber = true;
-            	    
-        	        _.forEach(results.data, function(dataValue, dataIndex) {
-            	        if ((isDateTime == true) && (moment(dataValue[fieldName], "YYYY-MM-DD", true).isValid() == false) && (dataValue[fieldName] != ""))
-            	        {
-            	        	isDateTime = false;
+        	    var resultData = processCsvData(results);
 
-            	        	if ((isNumber == true) && (!$.isNumeric(dataValue[fieldName])) && (dataValue[fieldName] != ""))
-            	            {
-            	                isNumber = false;
-            	                return false;
-            	            }
-            	        }
-        	        });
-            	    
-            	    var columnName = $('<td>').html(fieldName);
-            	    var dataType;
-            	    var displayFormat;
-            	    var selectType = $('#selectType').clone();
-
-            	    if (isDateTime)
-            	    {
-            	    	var selectFormat = $('#selectDateFormat').clone();
-            	    	selectType.find('select').attr('name', fieldName).find('option[value="date"]').attr('selected', 'selected');
-            	    	dataType = $('<td>').append(selectType);
-            	    	displayFormat = $('<td>').append(selectFormat);
-            	    }
-            	    else if (isNumber)
-            	    {
-            	    	var selectFormat = $('#selectNumericFormat').clone();
-            	    	selectType.find('select').attr('name', fieldName).find('option[value="numeric"]').attr('selected', 'selected');
-            	    	dataType = $('<td>').append(selectType);
-            	    	displayFormat = $('<td>').append(selectFormat);
-            	    }
-            	    else
-            	    {
-            	    	var selectFormat = $('#selectTextFormat').clone();
-            	    	selectType.find('select').attr('name', fieldName).find('option[value="text"]').attr('selected', 'selected');
-            	    	dataType = $('<td>').append(selectType);
-            	    	displayFormat = $('<td>').append(selectFormat);
-            	    }
-         	        
-        	        tbody.append($('<tr>').append(columnName).append(dataType).append(displayFormat));
-        	    });
-
-        	    resultData.isValid = true;
-        	    resultData.data = results.data;
-
-        	    updateHandsonTable();
+        	    _.forEach(resultData.fields, function(field) {
+        	    	var selectType = $('#selectType').clone().find('select').attr('name', field.name)
+        	    		.find('option[value="' + field.type + '"]').attr('selected', 'selected').end().end();
+        	    	var selectFormat = $('#selectFormat_' + field.type).clone();
+        	    	tbody.append($('<tr>').append($('<td>').html(field.name)).append($('<td>').append(selectType)).append($('<td>').append(selectFormat)));
+            	});
         	}
         });
     }
@@ -233,16 +188,17 @@ function processCsvData(csvParseResult)
 		_.forEach(returnData.convertedData, function(row, key) {
 			if (field.type == 'date')
 			{
-				var a = moment(row[field.name], "YYYY-MM-DD", true);
-				row[field.name] = moment(row[field.name], "YYYY-MM-DD", true);
+				var theDate = moment(row[field.name], "YYYY-MM-DD", true);
+				theDate.isValid() ? row[field.name] = theDate.format() : row[field.name] = "";
 			}
-			if (field.type == 'numeric')
+			else if (field.type == 'numeric')
 			{
-				var b = parseFloat(row[field.name]);
 				row[field.name] = parseFloat(row[field.name]);
 			}
 		});
 	});
+
+	return returnData;
 }
 
 function updateHandsonTable()
