@@ -110,13 +110,14 @@
 </form>
 </div>
 <script>
-var resultData = {'isValid': false, 'data': null, 'fields': []};
+var resultData;
 
 var handsonNew = new Handsontable(document.getElementById('handsonNew'), {
-    data: [],
+	data: [],
     minSpareRows: 0,
     rowHeaders: true,
-    colHeaders: [],
+    colHeaders: true,
+    readOnly: true,
     contextMenu: false
     });
 
@@ -134,7 +135,7 @@ var readFile = function(fileHandler)
         	    $("#step3").slideDown('fast');
         	    $("#csvMeta").val(JSON.stringify(results.meta));
 
-        	    var resultData = processCsvData(results);
+        	    resultData = processCsvData(results);
 
         	    _.forEach(resultData.fields, function(field) {
         	    	var selectType = $('#selectType').clone().find('select').attr('name', field.name)
@@ -142,6 +143,8 @@ var readFile = function(fileHandler)
         	    	var selectFormat = $('#selectFormat_' + field.type).clone();
         	    	tbody.append($('<tr>').append($('<td>').html(field.name)).append($('<td>').append(selectType)).append($('<td>').append(selectFormat)));
             	});
+
+        	    updateHandsonTable(resultData.convertedData, resultData.fields);
         	}
         });
     }
@@ -201,20 +204,20 @@ function processCsvData(csvParseResult)
 	return returnData;
 }
 
-function updateHandsonTable()
+function updateHandsonTable(data, fields, clearTable)
 {
-	var rows = $('#dataTypeSelection > tr');
-	_.forEach(rows, function(n, key) {
-		resultData.fields.push({
-			'indx': key + 1,
-			'name': $($(n).children()[0]).html(),
-			'type': $($(n).children()[1]).find('select').val(),
-			'format': $($(n).children()[2]).find('select').val()});
-	});
-
-	handsonNew.updateSettings({data: resultData.data, colHeaders: true,
-		columns: [{'data': 'term', 'type': 'text'}, {'data': 'grade', 'type': 'text'}]
-	});
+	if (clearTable == true)
+	{
+		handsonNew.updateSettings({data: [], columns: []});
+	}
+	else
+	{
+		columnSetting = _.map(fields, function(field) {
+			return {'data': field.name, 'type': field.type, 'format': field.format};
+		});
+	
+		handsonNew.updateSettings({data: data, columns: columnSetting});
+	}
 }
 
 $(document).on('ready', function() {
@@ -253,9 +256,8 @@ $(document).on('ready', function() {
         $("#step3").slideUp('fast');
         $("#csvMeta").val("");
         tbody.empty();
-        resultData.isValid = false;
-	    resultData.data = null;
-	    resultData.fields = [];
+	    resultData = {'originalData': null, 'convertedData': null, 'fields': []};
+	    updateHandsonTable(null, null, true);
     });
 });
 </script>
