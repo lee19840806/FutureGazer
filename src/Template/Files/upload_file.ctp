@@ -121,6 +121,9 @@ var handsonNew = new Handsontable(document.getElementById('handsonNew'), {
     contextMenu: false
     });
 
+var autoColumnSizePlugin = handsonNew.getPlugin('autoColumnSize');
+autoColumnSizePlugin.enablePlugin();
+
 var readFile = function(fileHandler)
 {
 	if (fileHandler != undefined)
@@ -196,7 +199,7 @@ function processCsvData(csvParseResult)
 			}
 			else if (field.type == 'numeric')
 			{
-				row[field.name] = parseFloat(row[field.name]);
+				(row[field.name] == '') ? (row[field.name] = null) : (row[field.name] = parseFloat(row[field.name]));
 			}
 		});
 	});
@@ -213,10 +216,32 @@ function updateHandsonTable(data, fields, clearTable)
 	else
 	{
 		columnSetting = _.map(fields, function(field) {
-			return {'data': field.name, 'type': field.type, 'format': field.format};
+			if (field.type == 'date')
+			{
+				return {data: field.name, type: field.type, renderer: dateRenderer};
+			}
+			else
+			{
+				return {data: field.name, type: field.type, format: field.format};
+			}
 		});
-	
-		handsonNew.updateSettings({data: data, columns: columnSetting});
+		
+		handsonNew.updateSettings({data: data, colHeaders: _.pluck(fields, 'name'), columns: columnSetting});
+		autoColumnSizePlugin.recalculateAllColumnsWidth();
+		handsonNew.render();
+	}
+}
+
+function dateRenderer(instance, td, row, col, prop, value, cellProperties)
+{
+	if (value == '')
+	{
+		return value;
+	}
+	else
+	{
+		td.innerHTML = moment(value).format('YYYY-MM-DD');
+		return td;
 	}
 }
 
