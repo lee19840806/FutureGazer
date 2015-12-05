@@ -110,7 +110,7 @@
 </form>
 </div>
 <script>
-var resultData;
+var resultData = {originalData: null, convertedData: null, fields: []};
 
 var handsonNew = new Handsontable(document.getElementById('handsonNew'), {
 	data: [],
@@ -141,9 +141,9 @@ var readFile = function(fileHandler)
         	    resultData = processCsvData(results);
 
         	    _.forEach(resultData.fields, function(field) {
-        	    	var selectType = $('#selectType').clone().find('select').attr('name', field.name)
+        	    	var selectType = $('#selectType').clone().find('select').attr('name', field.name).change(changeType)
         	    		.find('option[value="' + field.type + '"]').attr('selected', 'selected').end().end();
-        	    	var selectFormat = $('#selectFormat_' + field.type).clone();
+        	    	var selectFormat = $('#selectFormat_' + field.type).clone().find('select').change(changeFormat).attr('name', field.name).end();
         	    	tbody.append($('<tr>').append($('<td>').html(field.name)).append($('<td>').append(selectType)).append($('<td>').append(selectFormat)));
             	});
 
@@ -151,6 +151,90 @@ var readFile = function(fileHandler)
         	}
         });
     }
+}
+
+function changeFormat(e)
+{
+	var fieldName = $(e.target).attr('name');
+	_.find(resultData.fields, {name: fieldName}).format = e.target.value;
+
+	updateHandsonTable(resultData.convertedData, resultData.fields);
+}
+
+function changeType(e)
+{
+	var fieldName = $(e.target).attr('name');
+	var isDate = true;
+	var isNumeric = true;
+
+	_.forEach(resultData.originalData, function(row, key) {
+		if (e.target.value == 'numeric')
+		{
+			if (!$.isNumeric(row[fieldName]) && (row[fieldName] != ""))
+			{
+				isNumeric = false;
+				$(e.target).find('option').removeAttr('selected');
+				$(e.target).find('option[value="' + _.result(_.find(resultData.fields, {name: fieldName}), 'type') + '"]').attr('selected', 'selected');
+				alert('Value "' + row[fieldName] + '" at row ' + (key + 1) + ' cannot be converted to a number.');
+				return false;
+			}
+		}
+		
+		if (e.target.value == 'date')
+		{
+			if ((moment(row[fieldName], "YYYY-MM-DD", true).isValid() == false) && (row[fieldName] != ""))
+			{
+				isDate = false;
+				$(e.target).find('option').removeAttr('selected');
+				$(e.target).find('option[value="' + _.result(_.find(resultData.fields, {name: fieldName}), 'type') + '"]').attr('selected', 'selected');
+				alert('Value "' + row[fieldName] + '" at row ' + (key + 1) + ' cannot be converted to a date.');
+				return false;
+			}
+		}
+	});
+
+	if (isDate == false || isNumeric == false)
+	{
+		return;
+	}
+	
+	var selectFormat = $('#selectFormat_' + e.target.value).clone().find('select').change(changeFormat).attr('name', fieldName).end();
+	var td = $($(e.target).parent().parent().parent()).next();
+	td.children('form').remove();
+	td.append(selectFormat);
+
+	_.forEach(resultData.convertedData, function(row, key) {
+		if (e.target.value == 'text')
+		{
+			row[fieldName] = resultData.originalData[key][fieldName];
+		}
+		else if (e.target.value == 'numeric')
+		{
+			(resultData.originalData[key][fieldName] == '') ? (row[fieldName] = null) : (row[fieldName] = parseFloat(resultData.originalData[key][fieldName]));
+		}
+		else if (e.target.value == 'date')
+		{
+			var theDate = moment(resultData.originalData[key][fieldName], "YYYY-MM-DD", true);
+			theDate.isValid() ? row[fieldName] = theDate.format() : row[fieldName] = "";
+		}
+	});
+
+	_.find(resultData.fields, {name: fieldName}).type = e.target.value;
+
+	if (e.target.value == 'text')
+	{
+		_.find(resultData.fields, {name: fieldName}).format = 'general';
+	}
+	else if (e.target.value == 'numeric')
+	{
+		_.find(resultData.fields, {name: fieldName}).format = '0';
+	}
+	else if (e.target.value == 'date')
+	{
+		_.find(resultData.fields, {name: fieldName}).format = 'YYYY-MM-DD';
+	}
+	
+	updateHandsonTable(resultData.convertedData, resultData.fields);
 }
 
 function processCsvData(csvParseResult)
@@ -236,7 +320,8 @@ function dateRenderer(instance, td, row, col, prop, value, cellProperties)
 {
 	if (value == '')
 	{
-		return value;
+		td.innerHTML = '';
+		return td;
 	}
 	else
 	{
@@ -281,7 +366,7 @@ $(document).on('ready', function() {
         $("#step3").slideUp('fast');
         $("#csvMeta").val("");
         tbody.empty();
-	    resultData = {'originalData': null, 'convertedData': null, 'fields': []};
+	    resultData = {originalData: null, convertedData: null, fields: []};
 	    updateHandsonTable(null, null, true);
     });
 });
