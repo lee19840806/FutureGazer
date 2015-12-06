@@ -97,7 +97,6 @@ class FilesController extends AppController
         $this->layout = 'ajax';
         
         $fieldsEntities = [];
-        $abc = json_decode($this->request->data['fileFields'], true);
         
         foreach (json_decode($this->request->data['fileFields'], true) as $value)
         {
@@ -118,6 +117,37 @@ class FilesController extends AppController
         {
             $this->set('result', 0);
         }
+    }
+    
+    public function save_compressed_data()
+    {
+    	$this->request->allowMethod(['post']);
+    	$this->layout = 'ajax';
+    
+    	$fieldsEntities = [];
+    	$compressed = $this->request->data['fileContent'];
+    	$base64Decoded = base64_decode(base64_decode($str));
+    	$uncompressed = gzinflate($base64Decoded);
+    
+    	foreach (json_decode($this->request->data['fileFields'], true) as $value)
+    	{
+    		array_push($fieldsEntities, $this->Files->FileFields->newEntity(array('indx' => h($value['indx']), 'name' => h($value['name']), 'type' => h($value['type']))));
+    	}
+    
+    	$file = $this->Files->newEntity();
+    	$file->user_id = $this->Auth->user('id');
+    	$file->name = h($this->request->data['fileName']);
+    	$file->file_fields = $fieldsEntities;
+    	$file->file_content = $this->Files->FileContents->newEntity(array('content' => $this->request->data['fileContent']));
+    
+    	if ($this->Files->save($file))
+    	{
+    		$this->set('result', 1);
+    	}
+    	else
+    	{
+    		$this->set('result', 0);
+    	}
     }
     
     public function ajax_get_file()

@@ -265,12 +265,12 @@ $("#btnSave").click(function() {
                     .done(function(result) {
                         if (result == "0")
                         {
-                            alert("An error has occured when trying to save maturation curve data. Please try again.");
+                            alert("An error has occured when trying to save data. Please try again.");
                             thisButton.removeAttr('disabled');
                         }
                         else
                         {
-                            alert("Summary data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                            alert("Data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
                             thisButton.removeAttr('disabled');
                         }
                         })

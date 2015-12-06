@@ -5,6 +5,7 @@
 <script src="/js/papaparse.min.js"></script>
 <script src="/js/moment.min.js"></script>
 <script src="/js/handsontable.full.min.js"></script>
+<script src="/js/jszip.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -330,26 +331,75 @@ function dateRenderer(instance, td, row, col, prop, value, cellProperties)
 	}
 }
 
+function saveData(e)
+{
+	var thisButton = $(e.target);
+	thisButton.attr('disabled', 'disabled');
+	
+    var fileName = $("#dataSetName").val();
+    
+    if (fileName == "")
+    {
+        alert("Please enter a name for this data.");
+        thisButton.removeAttr('disabled');
+        return;
+    }
+
+    if (resultData.originalData == null)
+    {
+    	alert("Data is empty, please read data from a file.");
+        thisButton.removeAttr('disabled');
+        return;
+    }
+
+    var jsonData = JSON.stringify(resultData.convertedData);
+    var zip = new JSZip();
+    zip.file("zippedData", jsonData);
+    var zippedData = zip.generate({/*type : "string", */compression: "DEFLATE", compressionOptions : {level: 9}});
+    
+    $.ajax({
+        method: "POST",
+        url: "/Files/name_available",
+        data: {'fileName': fileName}
+    })
+    	.done(function(data) {
+            if (data == "0")
+            {
+                alert("File name '" + fileName + "' existed, please use another name.");
+                thisButton.removeAttr('disabled');
+            }
+            else
+            {
+                $.ajax({
+                    method: "POST",
+                    url: "/Files/save_compressed_data",
+                    timeout: 20000,
+                    data: {"fileName": fileName, "fileFields": JSON.stringify(resultData.fields), "fileContent": zippedData}
+                })
+                    .done(function(result) {
+                        if (result == "0")
+                        {
+                            alert("An error has occured when trying to save data. Please try again.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        else
+                        {
+                            alert("Data has been saved. Go to 'Manage my data' -> 'List my data' to view the data.");
+                            thisButton.removeAttr('disabled');
+                        }
+                        })
+                    .fail(function(jqXHR, textStatus, errorThrown) {
+                    	thisButton.removeAttr('disabled');
+                        });
+            }
+            });
+}
+
 $(document).on('ready', function() {
     var tbody = $('#dataTypeSelection');
     tbody.empty();
     
-    $("#btnSave").click(function() {
-    	var thisButton = $(this);
-    	thisButton.attr('disabled', 'disabled');
-    	
-        var fileName = $("#dataSetName").val();
-        
-        if (fileName == "")
-        {
-            alert("Please enter a name for this data");
-            thisButton.removeAttr('disabled');
-            return;
-        }
-
-        var columnTypes = $('#dataTypeSelection').find('select');
-        var a = 1;
-    });
+    $("#btnSave").click(saveData);
     
     $("#userFileUpload").fileinput({
         browseClass: "btn btn-primary",
