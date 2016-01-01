@@ -6,6 +6,7 @@
 <script src="/js/moment.min.js"></script>
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/jszip.min.js"></script>
+<script src="/js/FileSaver.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -351,12 +352,23 @@ function saveData(e)
         thisButton.removeAttr('disabled');
         return;
     }
-
+/*
     var jsonData = JSON.stringify(resultData.convertedData);
     var zip = new JSZip();
-    zip.file("zippedData", jsonData);
-    var zippedData = zip.generate({/*type : "string", */compression: "DEFLATE", compressionOptions : {level: 9}});
-    
+    zip.file("z.txt", jsonData);
+    var zippedBinary = zip.generate({type: "blob", compression: "DEFLATE", compressionOptions: {level: 9}});
+
+    var formData = new FormData();
+    formData.append('zippedBinary', zippedBinary);
+*/
+    var jsonData = JSON.stringify({"fileName": fileName, "fileFields": resultData.fields, "fileContent": resultData.convertedData});
+    var zip = new JSZip();
+    zip.file("z.txt", jsonData);
+    var zippedBinary = zip.generate({type: "blob", compression: "DEFLATE", compressionOptions: {level: 9}});
+
+    var formData = new FormData();
+    formData.append('zippedBinary', zippedBinary);
+
     $.ajax({
         method: "POST",
         url: "/Files/name_available",
@@ -374,7 +386,10 @@ function saveData(e)
                     method: "POST",
                     url: "/Files/save_compressed_data",
                     timeout: 20000,
-                    data: {"fileName": fileName, "fileFields": JSON.stringify(resultData.fields), "fileContent": zippedData}
+                    data: formData,
+                    cache: false,
+                    contentType: false,
+                    processData: false
                 })
                     .done(function(result) {
                         if (result == "0")
