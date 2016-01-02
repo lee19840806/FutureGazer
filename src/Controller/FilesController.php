@@ -100,7 +100,8 @@ class FilesController extends AppController
         
         foreach (json_decode($this->request->data['fileFields'], true) as $value)
         {
-            array_push($fieldsEntities, $this->Files->FileFields->newEntity(array('indx' => h($value['indx']), 'name' => h($value['name']), 'type' => h($value['type']))));
+            array_push($fieldsEntities, $this->Files->FileFields->newEntity(
+            	array('indx' => h($value['indx']), 'name' => h($value['name']), 'type' => h($value['type']))));
         }
         
         $file = $this->Files->newEntity();
@@ -126,13 +127,32 @@ class FilesController extends AppController
     	
     	$res = zip_open($this->request->data['zippedBinary']['tmp_name']);
     	$entry = zip_read($res);
-    	$fileSize = zip_entry_filesize($entry);
-    	$unzipped = zip_entry_read($entry, $fileSize);
-    	
+    	$unzipped = zip_entry_read($entry, zip_entry_filesize($entry));
     	$file = json_decode($unzipped, true);
     	zip_close($res);
     	
-    	$ac = 1;
+    	$fieldsEntities = [];
+    	
+    	foreach ($file['fileFields'] as $value)
+    	{
+    		array_push($fieldsEntities, $this->Files->FileFields->newEntity(
+    			array('indx' => h($value['indx']), 'name' => h($value['name']), 'type' => h($value['type']), 'format' => h($value['format']))));
+    	}
+    	
+    	$f = $this->Files->newEntity();
+    	$f->user_id = $this->Auth->user('id');
+    	$f->name = h($file['fileName']);
+    	$f->file_fields = $fieldsEntities;
+    	$f->file_content = $this->Files->FileContents->newEntity(array('content' => $file['fileContent']));
+    	
+    	if ($this->Files->save($f))
+    	{
+    		$this->set('result', 1);
+    	}
+    	else
+    	{
+    		$this->set('result', 0);
+    	}
     }
     
     public function ajax_get_file()

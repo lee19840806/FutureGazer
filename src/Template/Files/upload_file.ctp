@@ -6,7 +6,6 @@
 <script src="/js/moment.min.js"></script>
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/jszip.min.js"></script>
-<script src="/js/FileSaver.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -334,7 +333,7 @@ function dateRenderer(instance, td, row, col, prop, value, cellProperties)
 
 function saveData(e)
 {
-	var thisButton = $(e.target);
+	var thisButton = $(this);
 	thisButton.attr('disabled', 'disabled');
 	
     var fileName = $("#dataSetName").val();
@@ -352,16 +351,8 @@ function saveData(e)
         thisButton.removeAttr('disabled');
         return;
     }
-/*
-    var jsonData = JSON.stringify(resultData.convertedData);
-    var zip = new JSZip();
-    zip.file("z.txt", jsonData);
-    var zippedBinary = zip.generate({type: "blob", compression: "DEFLATE", compressionOptions: {level: 9}});
-
-    var formData = new FormData();
-    formData.append('zippedBinary', zippedBinary);
-*/
-    var jsonData = JSON.stringify({"fileName": fileName, "fileFields": resultData.fields, "fileContent": resultData.convertedData});
+    
+    var jsonData = JSON.stringify({"fileName": fileName, "fileFields": resultData.fields, "fileContent": JSON.stringify(resultData.convertedData)});
     var zip = new JSZip();
     zip.file("z.txt", jsonData);
     var zippedBinary = zip.generate({type: "blob", compression: "DEFLATE", compressionOptions: {level: 9}});
@@ -392,7 +383,7 @@ function saveData(e)
                     processData: false
                 })
                     .done(function(result) {
-                        if (result == "0")
+                        if (result == 0)
                         {
                             alert("An error has occured when trying to save data. Please try again.");
                             thisButton.removeAttr('disabled');
