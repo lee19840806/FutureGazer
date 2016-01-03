@@ -64,8 +64,9 @@ class FilesController extends AppController
         if ($this->Files->isOwnedBy($id, $this->Auth->user('id')))
         {
             $file = $this->Files->find()->where(['Files.id' => $id])->contain(['FileFields', 'FileContents'])->first()->toArray();
-            $this->set('fields', json_encode($file['file_fields']));
             $this->set('file', $file);
+            $this->set('fileFields', json_encode($file['file_fields']));
+            $this->set('fileName', $file['name']);
         }
         else
         {

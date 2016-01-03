@@ -1,6 +1,7 @@
 <link href="/css/handsontable.full.min.css" rel="stylesheet">
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/lodash.min.js"></script>
+<script src="/js/moment.min.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -18,7 +19,7 @@
                         Loading data, please wait...
                     </div>
                     <div class="panel panel-primary">
-                        <div class="panel-heading"><?= $file['name'] ?></div>
+                        <div class="panel-heading"><?= $fileName ?></div>
                         <div class="panel-body">
                             <div id="data" style="height: 700px; width: auto; overflow: hidden;"></div>
                         </div>
@@ -34,16 +35,81 @@
 <br>
 <script>
 var content = $.parseJSON('<?= $file['file_content']['content'] ?>');
-var fields = $.parseJSON('<?= $fields ?>')
+var fileFields = $.parseJSON('<?= $fileFields ?>');
+$("#loading").remove();
 
-var container = document.getElementById('data');
-var handsonTable = new Handsontable(container, {
-    data: content,
+var handsonNew = new Handsontable(document.getElementById('data'), {
+	data: [],
     minSpareRows: 0,
     rowHeaders: true,
-    colHeaders: _.pluck(fields, 'name'),
+    colHeaders: true,
+    readOnly: true,
     contextMenu: false
     });
 
-$("#loading").remove();
+var autoColumnSizePlugin = handsonNew.getPlugin('autoColumnSize');
+autoColumnSizePlugin.enablePlugin();
+
+updateHandsonTable(content, fileFields);
+
+function updateHandsonTable(data, fields, clearTable)
+{
+	if (clearTable == true)
+	{
+		handsonNew.updateSettings({data: [], columns: []});
+	}
+	else
+	{
+		columnSetting = _.map(fields, function(field) {
+			if (field.type == 'date')
+			{
+				return {data: field.name, type: field.type, renderer: dateRenderer};
+			}
+			else
+			{
+				return {data: field.name, type: field.type, format: field.format};
+			}
+		});
+		
+		handsonNew.updateSettings({data: data, colHeaders: _.pluck(fields, 'name'), columns: columnSetting});
+		autoColumnSizePlugin.recalculateAllColumnsWidth();
+		handsonNew.render();
+	}
+}
+
+function dateRenderer(instance, td, row, col, prop, value, cellProperties)
+{
+	if (value == '')
+	{
+		td.innerHTML = '';
+		return td;
+	}
+	else
+	{
+		td.innerHTML = moment(value).format('YYYY-MM-DD');
+		return td;
+	}
+}
 </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
