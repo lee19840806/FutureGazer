@@ -110,6 +110,8 @@ $('#datepicker').datepicker({
 });
 
 $('#generate').click(function() {
+	dates = [];
+	
 	var startDate = moment($('#startDate').datepicker('getDate'));
 	var endDate = moment($('#endDate').datepicker('getDate'));
 	var frequency = $('#frequency').val();
@@ -155,12 +157,12 @@ $('#generate').click(function() {
 		}
 
 		var dateObj = {};
-		dateObj[seriesName] = d.format('YYYY-MM-DD');
+		dateObj[seriesName] = d.format();
 		dates.push(dateObj);
 		currentDate.add(1, frequency);
 	}
 
-	fields.push({'indx': 1, 'name': seriesName, 'type': 'string'});
+	fields.push({'indx': 1, 'name': seriesName, 'type': 'string', 'format': 'YYYY-MM-DD'});
 
 	handsonTable.updateSettings({data: dates, colHeaders: _.pluck(fields, 'name')});
 });
@@ -173,7 +175,7 @@ $("#save").click(function() {
     
     if (fileName == "")
     {
-        alert("Please enter a name for this data")
+        alert("Please enter a name for this data");
         thisButton.removeAttr('disabled');
         return;
     }

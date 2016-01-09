@@ -136,7 +136,6 @@ var readFile = function(fileHandler)
         		var tbody = $('#dataTypeSelection');
         	    tbody.empty();
         	    $("#step2").slideDown('fast');
-        	    $("#step3").slideDown('fast');
         	    $("#csvMeta").val(JSON.stringify(results.meta));
 
         	    resultData = processCsvData(results);
@@ -419,7 +418,6 @@ $(document).on('ready', function() {
 
     $('#userFileUpload').on('fileclear', function(event) {
         $("#step2").slideUp('fast');
-        $("#step3").slideUp('fast');
         $("#csvMeta").val("");
         tbody.empty();
 	    resultData = {originalData: null, convertedData: null, fields: []};
