@@ -4,6 +4,7 @@
 <script src="/js/lodash.min.js"></script>
 <script src="/js/bootstrap-datepicker.min.js"></script>
 <script src="/js/moment.min.js"></script>
+<script src="/js/ht.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -96,6 +97,8 @@
 var dates = [];
 var fields = [];
 
+var myTable = new MyHandsonTable('data');
+/*
 var handsonTable = new Handsontable(document.getElementById('data'), {
     data: [],
     minSpareRows: 0,
@@ -103,7 +106,7 @@ var handsonTable = new Handsontable(document.getElementById('data'), {
     colHeaders: [],
     contextMenu: false
     });
-
+*/
 $('#datepicker').datepicker({
 	keyboardNavigation: false,
     autoclose: true
@@ -162,9 +165,9 @@ $('#generate').click(function() {
 		currentDate.add(1, frequency);
 	}
 
-	fields.push({'indx': 1, 'name': seriesName, 'type': 'string', 'format': 'YYYY-MM-DD'});
+	fields.push({'indx': 1, 'name': seriesName, 'type': 'date', 'format': 'YYYY-MM-DD'});
 
-	handsonTable.updateSettings({data: dates, colHeaders: _.pluck(fields, 'name')});
+	myTable.updateTable(dates, fields);
 });
 
 $("#save").click(function() {

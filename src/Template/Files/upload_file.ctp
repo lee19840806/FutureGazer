@@ -6,6 +6,7 @@
 <script src="/js/moment.min.js"></script>
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/jszip.min.js"></script>
+<script src="/js/ht.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -44,7 +45,7 @@
                         </div>
                     </form>
                     <hr>
-                    <div class="row">
+                    <div class="row" id="step3" style="display: none;">
                     	<div class="col-lg-12">
                     		<form class="form-inline">
 	                        	<div class="form-group">
@@ -113,17 +114,7 @@
 <script>
 var resultData = {originalData: null, convertedData: null, fields: []};
 
-var handsonNew = new Handsontable(document.getElementById('handsonNew'), {
-	data: [],
-    minSpareRows: 0,
-    rowHeaders: true,
-    colHeaders: true,
-    readOnly: true,
-    contextMenu: false
-    });
-
-var autoColumnSizePlugin = handsonNew.getPlugin('autoColumnSize');
-autoColumnSizePlugin.enablePlugin();
+var myTable = new MyHandsonTable('handsonNew');
 
 var readFile = function(fileHandler)
 {
@@ -136,6 +127,7 @@ var readFile = function(fileHandler)
         		var tbody = $('#dataTypeSelection');
         	    tbody.empty();
         	    $("#step2").slideDown('fast');
+        	    $("#step3").slideDown('fast');
         	    $("#csvMeta").val(JSON.stringify(results.meta));
 
         	    resultData = processCsvData(results);
@@ -147,7 +139,7 @@ var readFile = function(fileHandler)
         	    	tbody.append($('<tr>').append($('<td>').html(field.name)).append($('<td>').append(selectType)).append($('<td>').append(selectFormat)));
             	});
 
-        	    updateHandsonTable(resultData.convertedData, resultData.fields);
+        	    myTable.updateTable(resultData.convertedData, resultData.fields);
         	}
         });
     }
@@ -158,7 +150,7 @@ function changeFormat(e)
 	var fieldName = $(e.target).attr('name');
 	_.find(resultData.fields, {name: fieldName}).format = e.target.value;
 
-	updateHandsonTable(resultData.convertedData, resultData.fields);
+	myTable.updateTable(resultData.convertedData, resultData.fields);
 }
 
 function changeType(e)
@@ -234,7 +226,7 @@ function changeType(e)
 		_.find(resultData.fields, {name: fieldName}).format = 'YYYY-MM-DD';
 	}
 	
-	updateHandsonTable(resultData.convertedData, resultData.fields);
+	myTable.updateTable(resultData.convertedData, resultData.fields);
 }
 
 function processCsvData(csvParseResult)
@@ -289,45 +281,6 @@ function processCsvData(csvParseResult)
 	});
 
 	return returnData;
-}
-
-function updateHandsonTable(data, fields, clearTable)
-{
-	if (clearTable == true)
-	{
-		handsonNew.updateSettings({data: [], columns: []});
-	}
-	else
-	{
-		columnSetting = _.map(fields, function(field) {
-			if (field.type == 'date')
-			{
-				return {data: field.name, type: field.type, renderer: dateRenderer};
-			}
-			else
-			{
-				return {data: field.name, type: field.type, format: field.format};
-			}
-		});
-		
-		handsonNew.updateSettings({data: data, colHeaders: _.pluck(fields, 'name'), columns: columnSetting});
-		autoColumnSizePlugin.recalculateAllColumnsWidth();
-		handsonNew.render();
-	}
-}
-
-function dateRenderer(instance, td, row, col, prop, value, cellProperties)
-{
-	if (value == '')
-	{
-		td.innerHTML = '';
-		return td;
-	}
-	else
-	{
-		td.innerHTML = moment(value).format('YYYY-MM-DD');
-		return td;
-	}
 }
 
 function saveData(e)
@@ -418,10 +371,11 @@ $(document).on('ready', function() {
 
     $('#userFileUpload').on('fileclear', function(event) {
         $("#step2").slideUp('fast');
+        $("#step3").slideUp('fast');
         $("#csvMeta").val("");
         tbody.empty();
 	    resultData = {originalData: null, convertedData: null, fields: []};
-	    updateHandsonTable(null, null, true);
+	    myTable.clearTable();
     });
 });
 </script>

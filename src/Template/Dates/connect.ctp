@@ -1,6 +1,8 @@
 <link href="/css/handsontable.full.min.css" rel="stylesheet">
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/lodash.min.js"></script>
+<script src="/js/moment.min.js"></script>
+<script src="/js/ht.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -107,6 +109,10 @@
 <script>
 var dataSets = {'dataSet1': {data: [], fields: []}, 'dataSet2': {data: [], fields: []}, 'resultData': {data: [], fields: []}};
 
+var handson1 = new MyHandsonTable('handson1');
+var handson2 = new MyHandsonTable('handson2');
+var handsonNew = new MyHandsonTable('handsonNew');
+/*
 var handson1 = new Handsontable(document.getElementById('handson1'), {
     data: [],
     minSpareRows: 0,
@@ -130,7 +136,7 @@ var handsonNew = new Handsontable(document.getElementById('handsonNew'), {
     colHeaders: [],
     contextMenu: false
     });
-
+*/
 var handsonTables = {'handson1': handson1, 'handson2': handson2, 'handsonNew': handsonNew};
 
 $('#btnLoad1').click(loadData);
@@ -158,7 +164,7 @@ function loadData(event)
         var resultObj = $.parseJSON(result);
         dataSets['dataSet' + targetNum]['data'] = $.parseJSON(resultObj.file_content.content);
         dataSets['dataSet' + targetNum]['fields'] = resultObj.file_fields;
-    	handsonTables['handson' + targetNum].updateSettings({data: $.parseJSON(resultObj.file_content.content), colHeaders: _.pluck(resultObj.file_fields, 'name')});
+    	handsonTables['handson' + targetNum].updateTable($.parseJSON(resultObj.file_content.content), resultObj.file_fields);
 
     	target.removeAttr('disabled');
     	target.html('Load data');
@@ -196,7 +202,7 @@ function connectData(event)
 	
 	dataSets['resultData']['data'] = resultData.data;
     dataSets['resultData']['fields'] = resultData.fields;
-	handsonTables['handsonNew'].updateSettings({data: resultData.data, colHeaders: _.pluck(resultData.fields, 'name')});
+	handsonTables['handsonNew'].updateTable(resultData.data, resultData.fields);
 }
 
 function cartesianProduct(left, right)
@@ -213,7 +219,7 @@ function cartesianProduct(left, right)
 	var combinedFields = _.union(left.fields, right.fields);
 
 	_.forEach(combinedFields, function(field, key) {
-		var f = {'indx': key + 1, 'name': field['name'], 'type': field['type']};
+		var f = {'indx': key + 1, 'name': field['name'], 'type': field['type'], 'format': field['format']};
 		result.fields.push(f);
 	});
 

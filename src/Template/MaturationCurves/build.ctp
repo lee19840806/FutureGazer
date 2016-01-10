@@ -2,6 +2,8 @@
 <script src="/js/handsontable.full.min.js"></script>
 <script src="/js/lodash.min.js"></script>
 <script src="/js/Sortable.min.js"></script>
+<script src="/js/moment.min.js"></script>
+<script src="/js/ht.js"></script>
 <div class="container-fluid" style="padding-left: 40px; padding-right: 40px;">
     <div class="row">
         <div class="col-lg-2">
@@ -249,7 +251,7 @@ function updatePivotTable()
         obj['file_id'] = fileID;
         });
 
-	handsonTableMaturationCurves.updateSettings({data: mCurves.content, colHeaders: _.pluck(mCurves.fields, 'name')});
+	handsonTableMaturationCurves.updateTable(mCurves.content, mCurves.fields);
 }
 
 $('#modalAddCalcField').on('show.bs.modal', function(event) {
@@ -306,26 +308,15 @@ $('#modalButtonSave').click(function(event) {
 	$('#operand2').html('');
 });
 
-var handsonTable = new Handsontable(document.getElementById('data'), {
-    data: content,
-    minSpareRows: 0,
-    rowHeaders: true,
-    colHeaders: _.pluck(fields, 'name'),
-    contextMenu: false
-    });
+var myTable = new MyHandsonTable('data');
+myTable.updateTable(content, fields);
 
 $("#loading").remove();
 $("#divConfig").slideDown();
 $("#divMaturationCurves").slideDown();
 $("#divButtonBuild").slideDown();
 
-var handsonTableMaturationCurves = new Handsontable(document.getElementById('dataMaturationCurves'), {
-    data: [],
-    minSpareRows: 0,
-    rowHeaders: true,
-    colHeaders: [],
-    contextMenu: false
-    });
+var handsonTableMaturationCurves = new MyHandsonTable('dataMaturationCurves');
 
 function aggregate(collection, originalFields, groupVariables, aggregationFields, calculatedFields)
 {
@@ -337,7 +328,11 @@ function aggregate(collection, originalFields, groupVariables, aggregationFields
         });
 
     _.forEach(groupVariables, function(obj) {
-        fields.push({'indx': fields.length + 1, 'name': obj, 'type': _.find(originalFields, {'name': obj})['type']});
+        fields.push({
+            'indx': fields.length + 1,
+            'name': obj,
+            'type': _.find(originalFields, {'name': obj})['type'],
+            'format': _.find(originalFields, {'name': obj})['format']});
         });
 
     var aggregateResult = _.map(groupByResult, function(obj) {
@@ -358,15 +353,27 @@ function aggregate(collection, originalFields, groupVariables, aggregationFields
         });
 
     _.forEach(aggregationFields.sum, function(n) {
-        fields.push({'indx': fields.length + 1, 'name': n, 'type': _.find(originalFields, {'name': n})['type']});
+        fields.push({
+            'indx': fields.length + 1,
+			'name': n,
+			'type': _.find(originalFields, {'name': n})['type'],
+			'format': _.find(originalFields, {'name': n})['format']});
         });
 
+    _.forEach(calculatedFields.add, function(obj) {
+        _.forEach(aggregateResult, function(n) {
+            n[obj['fieldName']] = n[obj['operand1']] + n[obj['operand2']];
+            });
+
+        fields.push({'indx': fields.length + 1, 'name': obj['fieldName'], 'type': 'numeric', 'format': '0.00'});
+        });
+    
     _.forEach(calculatedFields.divide, function(obj) {
         _.forEach(aggregateResult, function(n) {
             n[obj['fieldName']] = n[obj['operand1']] / n[obj['operand2']];
             });
 
-        fields.push({'indx': fields.length + 1, 'name': obj['fieldName'], 'type': 'number'});
+        fields.push({'indx': fields.length + 1, 'name': obj['fieldName'], 'type': 'numeric', 'format': '0.00%'});
         });
 
     var sortedResult = _.sortByAll(aggregateResult, groupVariables);
